@@ -67,6 +67,9 @@ AerodromeCatalog::fromConfig(const Config& conf)
     if ( conf.hasChild("taxiways") )
         _taxiwayOptions->merge( conf.child("taxiways") );
 
+    if ( conf.hasChild("terminals") )
+        _terminalOptions->merge( conf.child("terminals") );
+
     if ( conf.hasChild("windsocks") )
         _windsockOptions->merge( conf.child("windsocks") );
 
@@ -86,6 +89,7 @@ AerodromeCatalog::getConfig() const
     conf.updateObjIfSet( "startup_locations", _startupLocationOptions );
     conf.updateObjIfSet( "stopways", _stopwayOptions );
     conf.updateObjIfSet( "taxiways", _taxiwayOptions );
+    conf.updateObjIfSet( "terminals", _terminalOptions );
     conf.updateObjIfSet( "windsocks", _windsockOptions );
 
     return conf;

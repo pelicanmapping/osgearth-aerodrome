@@ -27,6 +27,7 @@ set(LIB_PUBLIC_HEADERS
     StartupLocationNode
     StopwayNode
     TaxiwayNode
+    TerminalNode
     WindsockNode
 )
 

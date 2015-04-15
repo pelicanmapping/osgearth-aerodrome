@@ -21,7 +21,17 @@
 #include "Common"
 #include "AerodromeNode"
 #include "AerodromeCatalog"
-//#include "RunwayNode"
+#include "LightBeaconNode"
+#include "LightIndicatorNode"
+#include "LinearFeatureNode"
+#include "PavementNode"
+#include "RunwayNode"
+#include "RunwayThresholdNode"
+#include "StartupLocationNode"
+#include "StopwayNode"
+#include "TaxiwayNode"
+#include "TerminalNode"
+#include "WindsockNode"
 
 /* ********** TEMPORARY ********** */
 #include "AerodromeRenderer"
@@ -125,10 +135,10 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
     AerodromeContext context;
 
     if (catalog->lightBeaconOptions().isSet())
-        createFeatureNodes<PavementNode>(catalog->lightBeaconOptions().value(), context, options);
+        createFeatureNodes<LightBeaconNode>(catalog->lightBeaconOptions().value(), context, options);
 
     if (catalog->lightIndicatorOptions().isSet())
-        createFeatureNodes<PavementNode>(catalog->lightIndicatorOptions().value(), context, options);
+        createFeatureNodes<LightIndicatorNode>(catalog->lightIndicatorOptions().value(), context, options);
 
     if (catalog->linearFeatureOptions().isSet())
         createFeatureNodes<LinearFeatureNode>(catalog->linearFeatureOptions().value(), context, options);
@@ -140,19 +150,22 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
         createFeatureNodes<RunwayNode>(catalog->runwayOptions().value(), context, options);
 
     if (catalog->runwayThresholdOptions().isSet())
-        createFeatureNodes<PavementNode>(catalog->runwayThresholdOptions().value(), context, options);
+        createFeatureNodes<RunwayThresholdNode>(catalog->runwayThresholdOptions().value(), context, options);
 
     if (catalog->startupLocationOptions().isSet())
-        createFeatureNodes<PavementNode>(catalog->startupLocationOptions().value(), context, options);
+        createFeatureNodes<StartupLocationNode>(catalog->startupLocationOptions().value(), context, options);
 
     if (catalog->stopwayOptions().isSet())
-        createFeatureNodes<PavementNode>(catalog->stopwayOptions().value(), context, options);
+        createFeatureNodes<StopwayNode>(catalog->stopwayOptions().value(), context, options);
 
     if (catalog->taxiwayOptions().isSet())
         createFeatureNodes<TaxiwayNode>(catalog->taxiwayOptions().value(), context, options);
 
+    if (catalog->terminalOptions().isSet())
+        createFeatureNodes<TerminalNode>(catalog->terminalOptions().value(), context, options);
+
     if (catalog->windsockOptions().isSet())
-        createFeatureNodes<PavementNode>(catalog->windsockOptions().value(), context, options);
+        createFeatureNodes<WindsockNode>(catalog->windsockOptions().value(), context, options);
 
     OE_NOTICE << LC << "Created " << context.aerodromes.size() << " aerodromes." << std::endl;
 

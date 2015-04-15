@@ -29,6 +29,7 @@
 #include "StartupLocationNode"
 #include "StopwayNode"
 #include "TaxiwayNode"
+#include "TerminalNode"
 #include "WindsockNode"
 
 #include <osgEarthFeatures/Feature>
@@ -49,9 +50,9 @@ AerodromeRenderer::AerodromeRenderer(const Map* map)
 }
 
 void
-AerodromeRenderer::apply(RunwayNode& node)
+AerodromeRenderer::apply(LightBeaconNode& node)
 {
-    //TODO: create geometry for runway and add to node
+    //TODO: create geometry for light beacon and add to node
 #if 0
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = randomFeatureRenderer(feature.get());
@@ -61,21 +62,9 @@ AerodromeRenderer::apply(RunwayNode& node)
 }
 
 void
-AerodromeRenderer::apply(TaxiwayNode& node)
+AerodromeRenderer::apply(LightIndicatorNode& node)
 {
-    //TODO: create geometry for taxiway and add to node
-#if 0
-    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
-    if (geom)
-        node.addChild(geom);
-#endif
-}
-
-void
-AerodromeRenderer::apply(PavementNode& node)
-{
-    //TODO: create geometry for pavement and add to node
+    //TODO: create geometry for light indicator and add to node
 #if 0
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = randomFeatureRenderer(feature.get());
@@ -97,9 +86,9 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
 }
 
 void
-AerodromeRenderer::apply(LightBeaconNode& node)
+AerodromeRenderer::apply(PavementNode& node)
 {
-    //TODO: create geometry for light beacon and add to node
+    //TODO: create geometry for pavement and add to node
 #if 0
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = randomFeatureRenderer(feature.get());
@@ -109,9 +98,9 @@ AerodromeRenderer::apply(LightBeaconNode& node)
 }
 
 void
-AerodromeRenderer::apply(LightIndicatorNode& node)
+AerodromeRenderer::apply(RunwayNode& node)
 {
-    //TODO: create geometry for light indicator and add to node
+    //TODO: create geometry for runway and add to node
 #if 0
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = randomFeatureRenderer(feature.get());
@@ -157,6 +146,30 @@ AerodromeRenderer::apply(StopwayNode& node)
 }
 
 void
+AerodromeRenderer::apply(TaxiwayNode& node)
+{
+    //TODO: create geometry for taxiway and add to node
+#if 0
+    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+    osg::Node* geom = randomFeatureRenderer(feature.get());
+    if (geom)
+        node.addChild(geom);
+#endif
+}
+
+void
+AerodromeRenderer::apply(TerminalNode& node)
+{
+    //TODO: create geometry for terminal and add to node
+#if 0
+    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+    osg::Node* geom = randomFeatureRenderer(feature.get());
+    if (geom)
+        node.addChild(geom);
+#endif
+}
+
+void
 AerodromeRenderer::apply(WindsockNode& node)
 {
     //TODO: create geometry for windsock and add to node
@@ -191,6 +204,8 @@ AerodromeRenderer::apply(osg::Group& node)
         apply(static_cast<StopwayNode&>(node));
     else if (dynamic_cast<TaxiwayNode*>(&node))
         apply(static_cast<TaxiwayNode&>(node));
+    else if (dynamic_cast<TerminalNode*>(&node))
+        apply(static_cast<TerminalNode&>(node));
     else if (dynamic_cast<WindsockNode*>(&node))
         apply(static_cast<WindsockNode&>(node));
 

@@ -36,6 +36,7 @@
 #include "StartupLocationNode"
 #include "StopwayNode"
 #include "TaxiwayNode"
+#include "TerminalNode"
 #include "WindsockNode"
 
 namespace osgEarth { namespace Aerodrome
@@ -51,15 +52,16 @@ namespace osgEarth { namespace Aerodrome
 
         AerodromeRenderer(const Map* map);
 
-        virtual void apply(RunwayNode& node);
-        virtual void apply(TaxiwayNode& node);
-        virtual void apply(PavementNode& node);
-        virtual void apply(LinearFeatureNode& node);
         virtual void apply(LightBeaconNode& node);
         virtual void apply(LightIndicatorNode& node);
+        virtual void apply(LinearFeatureNode& node);
+        virtual void apply(PavementNode& node);
+        virtual void apply(RunwayNode& node);
         virtual void apply(RunwayThresholdNode& node);
         virtual void apply(StartupLocationNode& node);
         virtual void apply(StopwayNode& node);
+        virtual void apply(TaxiwayNode& node);
+        virtual void apply(TerminalNode& node);
         virtual void apply(WindsockNode& node);
 
         virtual void apply(osg::Group& node);
