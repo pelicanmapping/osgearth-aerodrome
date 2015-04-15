@@ -1,0 +1,110 @@
+/* -*-c++-*- */
+/* osgEarth - Dynamic map generation toolkit for OpenSceneGraph
+* Copyright 2008-2014 Pelican Mapping
+* http://osgearth.org
+*
+* osgEarth is free software; you can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+#ifndef OSGEARTH_AERODROME_AERODROMECATALOG
+#define OSGEARTH_AERODROME_AERODROMECATALOG 1
+
+#include <osg/Group>
+
+#include "Common"
+#include "AerodromeNode"
+#include "AerodromeFeatureOptions"
+#include <osgEarth/Config>
+#include <osg/Referenced>
+#include <osgEarth/URI>
+#include <osgEarthFeatures/FeatureSource>
+
+namespace osgEarth { namespace Aerodrome
+{
+    using namespace osgEarth;
+    using namespace osgEarth::Features;
+
+    /**
+     * Aerodrome
+     */
+    class OSGEARTHAERODROME_EXPORT AerodromeCatalog : public osg::Referenced
+    {
+    public:
+
+        AerodromeCatalog();
+
+        virtual ~AerodromeCatalog() { }
+
+    public: // properties
+
+        optional<AerodromeFeatureOptions>& lightBeaconOptions() { return _lightBeaconOptions; }
+        const optional<AerodromeFeatureOptions>& lightBeaconOptions() const { return _lightBeaconOptions; }
+
+        optional<AerodromeFeatureOptions>& lightIndicatorOptions() { return _lightIndicatorOptions; }
+        const optional<AerodromeFeatureOptions>& lightIndicatorOptions() const { return _lightIndicatorOptions; }
+
+        optional<AerodromeFeatureOptions>& linearFeatureOptions() { return _linearFeatureOptions; }
+        const optional<AerodromeFeatureOptions>& linearFeatureOptions() const { return _linearFeatureOptions; }
+
+        optional<AerodromeFeatureOptions>& pavementOptions() { return _pavementOptions; }
+        const optional<AerodromeFeatureOptions>& pavementOptions() const { return _pavementOptions; }
+
+        optional<AerodromeFeatureOptions>& runwayOptions() { return _runwayOptions; }
+        const optional<AerodromeFeatureOptions>& runwayOptions() const { return _runwayOptions; }
+
+        optional<AerodromeFeatureOptions>& runwayThresholdOptions() { return _runwayThresholdOptions; }
+        const optional<AerodromeFeatureOptions>& runwayThresholdOptions() const { return _runwayThresholdOptions; }
+
+        optional<AerodromeFeatureOptions>& startupLocationOptions() { return _startupLocationOptions; }
+        const optional<AerodromeFeatureOptions>& startupLocationOptions() const { return _startupLocationOptions; }
+
+        optional<AerodromeFeatureOptions>& stopwayOptions() { return _stopwayOptions; }
+        const optional<AerodromeFeatureOptions>& stopwayOptions() const { return _stopwayOptions; }
+
+        optional<AerodromeFeatureOptions>& taxiwayOptions() { return _taxiwayOptions; }
+        const optional<AerodromeFeatureOptions>& taxiwayOptions() const { return _taxiwayOptions; }
+
+        optional<AerodromeFeatureOptions>& windsockOptions() { return _windsockOptions; }
+        const optional<AerodromeFeatureOptions>& windsockOptions() const { return _windsockOptions; }
+
+    public: // serialization
+
+        // populate this object from a Config
+        void fromConfig(const Config& conf);
+
+        // serialize this object to a Config.
+        Config getConfig() const;
+
+    public: // static utility
+
+        /** Reads an aerodrome catalog from a URI. */
+        static AerodromeCatalog* read(const URI& uri, const osgDB::Options* options);
+
+    protected:
+
+        optional<int> _version;
+        optional<AerodromeFeatureOptions> _lightBeaconOptions;
+        optional<AerodromeFeatureOptions> _lightIndicatorOptions;
+        optional<AerodromeFeatureOptions> _linearFeatureOptions;
+        optional<AerodromeFeatureOptions> _pavementOptions;
+        optional<AerodromeFeatureOptions> _runwayOptions;
+        optional<AerodromeFeatureOptions> _runwayThresholdOptions;
+        optional<AerodromeFeatureOptions> _startupLocationOptions;
+        optional<AerodromeFeatureOptions> _stopwayOptions;
+        optional<AerodromeFeatureOptions> _taxiwayOptions;
+        optional<AerodromeFeatureOptions> _windsockOptions;
+    };
+
+} } // namespace osgEarth::Aerodrome
+
+#endif // OSGEARTH_AERODROME_AERODROMECATALOG

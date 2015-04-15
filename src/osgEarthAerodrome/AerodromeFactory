@@ -1,0 +1,98 @@
+/* -*-c++-*- */
+/* osgEarth - Dynamic map generation toolkit for OpenSceneGraph
+* Copyright 2008-2014 Pelican Mapping
+* http://osgearth.org
+*
+* osgEarth is free software; you can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+#ifndef OSGEARTH_AERODROME_AERODROMEFACTORY
+#define OSGEARTH_AERODROME_AERODROMEFACTORY 1
+
+#include <osg/Group>
+
+#include "Common"
+#include "AerodromeNode"
+#include "AerodromeCatalog"
+#include "AerodromeFeatureOptions"
+//#include "RunwayNode"
+#include <osgEarth/Map>
+
+
+namespace osgEarth { namespace Aerodrome
+{
+    using namespace osgEarth;
+    using namespace osgEarth::Features;
+
+    /**
+     * Aerodrome
+     */
+    class OSGEARTHAERODROME_EXPORT AerodromeFactory
+    {
+    public:
+
+        AerodromeFactory(const Map* map);
+
+        virtual ~AerodromeFactory() { }
+
+        // creates aerodromes from AerodromeCatalog file
+        osg::Group* createAerodromes(const URI& uri, const osgDB::Options* options=0L);
+
+        // creates aerodromes from AerodromeCatalog
+        osg::Group* createAerodromes(AerodromeCatalog* catalog, const osgDB::Options* options=0L);
+
+    protected:
+
+        struct AerodromeContext
+        {
+            osg::ref_ptr<osg::Group> root;
+            AerodromeNodeMap aerodromes;
+
+            AerodromeContext() { root = new osg::Group(); };
+
+            AerodromeNode* getOrCreateAerodromeNode(const std::string& icao)
+            {
+                AerodromeNode* an = 0L;
+
+                AerodromeNodeMap::iterator itr = aerodromes.find(icao);
+                if (itr != aerodromes.end())
+                {
+                    an = itr->second.get();
+                }
+                else
+                {
+                    an = new AerodromeNode(icao);
+                    aerodromes[icao] = an;
+
+                    if (root.valid())
+                        root->addChild(an);
+
+                    OE_NOTICE << "[AerodromeFactory] Added new aerodrome: " << icao << std::endl;
+                }
+
+                return an;
+            };
+        };
+
+        //void createRunways(AerodromeFeatureOptions runwayOpts, AerodromeContext& context, const osgDB::Options* options);
+
+        template <typename T> void createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options);
+
+/* ********** TEMPORARY ********** */
+        osg::observer_ptr<const Map> _map;
+/* ********** TEMPORARY ********** */
+    };
+
+} } // namespace osgEarth::Aerodrome
+
+#endif // OSGEARTH_AERODROME_AERODROMEFACTORY

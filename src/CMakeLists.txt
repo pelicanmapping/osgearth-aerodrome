@@ -1,0 +1,3 @@
+add_subdirectory(osgEarthAerodrome)
+add_subdirectory(applications)
+add_subdirectory(drivers)
