@@ -50,8 +50,9 @@ namespace osgEarth { namespace Aerodrome
     {
     public:
 
-        AerodromeRenderer(const Map* map);
+        AerodromeRenderer(Map* map);
 
+        virtual void apply(AerodromeNode& node);
         virtual void apply(LightBeaconNode& node);
         virtual void apply(LightIndicatorNode& node);
         virtual void apply(LinearFeatureNode& node);
@@ -66,11 +67,12 @@ namespace osgEarth { namespace Aerodrome
 
         virtual void apply(osg::Group& node);
 
-        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature);
+        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, float height=-1.0f);
 
     protected:
 
-        osg::ref_ptr<const Map> _map;
+        osg::ref_ptr<Map> _map;
+        osgEarth::Bounds _bounds;
     };
 
 } } // namespace osgEarth::Aerodrome

@@ -43,10 +43,43 @@ using namespace osgEarth::Aerodrome;
 #define LC "[AerodromeRenderer] "
 
 
-AerodromeRenderer::AerodromeRenderer(const Map* map)
+namespace
+{
+    class BoundingBoxMaskSource : public MaskSource
+    {
+    public:
+        BoundingBoxMaskSource(osgEarth::Bounds bounds)
+          : MaskSource(), _bounds(bounds)
+        {
+        }
+
+        osg::Vec3dArray* createBoundary(const SpatialReference* srs, ProgressCallback* progress =0L)
+        {
+            osg::Vec3dArray* boundary = new osg::Vec3dArray();
+            boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMin(), 0.0));
+            boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMin(), 0.0));
+            boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMax(), 0.0));
+            boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMax(), 0.0));
+            
+            return boundary;
+        }
+
+    private:
+        osgEarth::Bounds _bounds;
+    };
+}
+
+
+AerodromeRenderer::AerodromeRenderer(Map* map)
   : _map(map), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
     //nop
+}
+
+void
+AerodromeRenderer::apply(AerodromeNode& node)
+{
+    //TODO:  create underlying ground geometry and add to scene
 }
 
 void
@@ -105,7 +138,10 @@ AerodromeRenderer::apply(RunwayNode& node)
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = randomFeatureRenderer(feature.get());
     if (geom)
+    {
+        geom->setName("RUNWAY_" + node.icao() +  osgEarth::toString(feature->getFID()));
         node.addChild(geom);
+    }
 #endif
 }
 
@@ -184,9 +220,20 @@ AerodromeRenderer::apply(WindsockNode& node)
 void
 AerodromeRenderer::apply(osg::Group& node)
 {
-    //OE_WARN << LC << "apply(RunwayNode& node)" << std::endl;
+    // accumulate the bounds
+    AerodromeFeatureNode* fnode = dynamic_cast<AerodromeFeatureNode*>(&node);
+    if (fnode)
+    {
+        Feature* f = fnode->getFeature();
+        if (f && f->getGeometry())
+        {
+            _bounds.expandBy(f->getGeometry()->getBounds());
+        }
+    }
 
-    if (dynamic_cast<LightBeaconNode*>(&node))
+    if (dynamic_cast<AerodromeNode*>(&node))
+        _bounds.init();
+    else if (dynamic_cast<LightBeaconNode*>(&node))
         apply(static_cast<LightBeaconNode&>(node));
     else if (dynamic_cast<LightIndicatorNode*>(&node))
         apply(static_cast<LightIndicatorNode&>(node));
@@ -210,10 +257,17 @@ AerodromeRenderer::apply(osg::Group& node)
         apply(static_cast<WindsockNode&>(node));
 
     traverse(node);
+
+    if (dynamic_cast<AerodromeNode*>(&node))
+    {
+        _map->addTerrainMaskLayer(new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(_bounds)));
+
+        apply(static_cast<AerodromeNode&>(node));
+    }
 }
 
 osg::Node*
-AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature)
+AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, float height)
 {
     if (feature && _map.valid())
     {
@@ -242,6 +296,11 @@ AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature)
         else
         {
             style.getOrCreate<LineSymbol>()->stroke()->color() = Color(r, g, b, 1.0);
+        }
+
+        if (height > 0.0)
+        {
+            style.getOrCreate<ExtrusionSymbol>()->height() = height;
         }
 
         style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_TO_TERRAIN;

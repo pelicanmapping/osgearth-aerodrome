@@ -62,13 +62,15 @@ AerodromeModelSource::createNodeImplementation(const Map*            map,
                                                const osgDB::Options* dbOptions,
                                                ProgressCallback*     progress )
 {
-    AerodromeFactory factory(map);
-    osg::ref_ptr<osg::Node> node = factory.createAerodromes(_catalog.get(), dbOptions);
+    //AerodromeFactory factory(map);
+    //osg::ref_ptr<osg::Node> node = factory.createAerodromes(_catalog.get(), dbOptions);
 
-    AerodromeRenderer renderer(map);
-    node->accept(renderer);
+    //AerodromeRenderer renderer(map);
+    //node->accept(renderer);
 
-    return node.release();
+    //return node.release();
+
+    return 0L;
 }
 
 //------------------------------------------------------------------------

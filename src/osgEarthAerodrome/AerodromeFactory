@@ -41,7 +41,7 @@ namespace osgEarth { namespace Aerodrome
     {
     public:
 
-        AerodromeFactory(const Map* map);
+        AerodromeFactory(Map* map);
 
         virtual ~AerodromeFactory() { }
 
@@ -89,7 +89,7 @@ namespace osgEarth { namespace Aerodrome
         template <typename T> void createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options);
 
 /* ********** TEMPORARY ********** */
-        osg::observer_ptr<const Map> _map;
+        osg::ref_ptr<Map> _map;
 /* ********** TEMPORARY ********** */
     };
 

@@ -48,7 +48,7 @@ using namespace osgEarth::Aerodrome;
 #define LC "[AerodromeFactory] "
 
 
-AerodromeFactory::AerodromeFactory(const Map* map)
+AerodromeFactory::AerodromeFactory(Map* map)
   : _map(map)
 {
     //nop
