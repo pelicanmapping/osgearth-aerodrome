@@ -33,10 +33,6 @@
 #include "TerminalNode"
 #include "WindsockNode"
 
-/* ********** TEMPORARY ********** */
-#include "AerodromeRenderer"
-/* ********** TEMPORARY ********** */
-
 #include <osgEarthFeatures/Feature>
 #include <osgEarthFeatures/FeatureSource>
 
@@ -67,10 +63,6 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
     
     OE_NOTICE << LC << "Reading features...\n";
 
-/* ********** TEMPORARY ********** */
-    AerodromeRenderer renderer(_map.get());
-/* ********** TEMPORARY ********** */
-
     int featureCount = 0;
 
     osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor();
@@ -78,31 +70,23 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
     {
         Feature* f = cursor->nextFeature();
 
+        /* **************************************** */
+        /* Necessary but not sure why               */
+
+        const SpatialReference* ecefSRS = f->getSRS()->getGeographicSRS()->getECEF();
+
+        /* **************************************** */
+
         std::string icao = f->getString(featureOpts.icaoAttr().value());
         if (!icao.empty())
         {
             osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
             if (an.valid())
             {
-                // create new RunwayNode and add to parent AerodromeNode
+                // create new node and add to parent AerodromeNode
                 OE_NOTICE << LC << "Adding feature to aerodrome: " << icao << std::endl;
 
-                T* fn = new T(icao, f);
-
-            /* ********** TEMPORARY ********** */
-                osg::Node* geomNode = renderer.randomFeatureRenderer(f);
-                if (geomNode)
-                {
-                    geomNode->setName("RUNWAY_" + icao +  osgEarth::toString(f->getFID()));
-                    fn->addChild(geomNode);
-                }
-                else
-                {
-                    OE_WARN << LC << "Failed to create geometry for feature node with FID: " << f->getFID() << std::endl;
-                }
-            /* ********** TEMPORARY ********** */
-
-                an->addChild(fn);
+                an->addChild(new T(icao, f));
                 featureCount++;
             }
         }
