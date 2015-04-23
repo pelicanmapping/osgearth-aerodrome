@@ -23,7 +23,7 @@
 
 #include "Common"
 #include "RunwayNode"
-//#include <osgEarthFeatures/FeatureSource>
+#include <osgEarth/MaskLayer>
 
 namespace osgEarth { namespace Aerodrome
 {
@@ -44,10 +44,13 @@ namespace osgEarth { namespace Aerodrome
 
         const std::string& icao() { return _icao; }
 
+        void setMaskLayer(osgEarth::MaskLayer* maskLayer) { _maskLayer = maskLayer; }
+        osgEarth::MaskLayer* getMaskLayer() { return _maskLayer.get(); }
+
     protected:
 
         std::string _icao;
-        //std::vector<Runway> _runways;
+        osg::ref_ptr<osgEarth::MaskLayer> _maskLayer;
     };
 
     typedef std::vector< osg::ref_ptr<AerodromeNode> > AerodromeNodeVector;

@@ -79,7 +79,19 @@ AerodromeRenderer::AerodromeRenderer(Map* map)
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
-    //TODO:  create underlying ground geometry and add to scene
+    // reset bounds object for this new aerodrome we are about to travers
+    _bounds.init();
+
+    traverse(node);
+
+
+    //TODO:  create underlying ground geometry
+
+    
+    // create mask layer based on accumulated bounds
+    osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(_bounds));
+    node.setMaskLayer(mask);
+    _map->addTerrainMaskLayer(mask);
 }
 
 void
@@ -232,37 +244,35 @@ AerodromeRenderer::apply(osg::Group& node)
     }
 
     if (dynamic_cast<AerodromeNode*>(&node))
-        _bounds.init();
-    else if (dynamic_cast<LightBeaconNode*>(&node))
-        apply(static_cast<LightBeaconNode&>(node));
-    else if (dynamic_cast<LightIndicatorNode*>(&node))
-        apply(static_cast<LightIndicatorNode&>(node));
-    else if (dynamic_cast<LinearFeatureNode*>(&node))
-        apply(static_cast<LinearFeatureNode&>(node));
-    else if (dynamic_cast<PavementNode*>(&node))
-        apply(static_cast<PavementNode&>(node));
-    else if (dynamic_cast<RunwayNode*>(&node))
-        apply(static_cast<RunwayNode&>(node));
-    else if (dynamic_cast<RunwayThresholdNode*>(&node))
-        apply(static_cast<RunwayThresholdNode&>(node));
-    else if (dynamic_cast<StartupLocationNode*>(&node))
-        apply(static_cast<StartupLocationNode&>(node));
-    else if (dynamic_cast<StopwayNode*>(&node))
-        apply(static_cast<StopwayNode&>(node));
-    else if (dynamic_cast<TaxiwayNode*>(&node))
-        apply(static_cast<TaxiwayNode&>(node));
-    else if (dynamic_cast<TerminalNode*>(&node))
-        apply(static_cast<TerminalNode&>(node));
-    else if (dynamic_cast<WindsockNode*>(&node))
-        apply(static_cast<WindsockNode&>(node));
-
-    traverse(node);
-
-    if (dynamic_cast<AerodromeNode*>(&node))
     {
-        _map->addTerrainMaskLayer(new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(_bounds)));
-
         apply(static_cast<AerodromeNode&>(node));
+    }
+    else
+    {
+        if (dynamic_cast<LightBeaconNode*>(&node))
+            apply(static_cast<LightBeaconNode&>(node));
+        else if (dynamic_cast<LightIndicatorNode*>(&node))
+            apply(static_cast<LightIndicatorNode&>(node));
+        else if (dynamic_cast<LinearFeatureNode*>(&node))
+            apply(static_cast<LinearFeatureNode&>(node));
+        else if (dynamic_cast<PavementNode*>(&node))
+            apply(static_cast<PavementNode&>(node));
+        else if (dynamic_cast<RunwayNode*>(&node))
+            apply(static_cast<RunwayNode&>(node));
+        else if (dynamic_cast<RunwayThresholdNode*>(&node))
+            apply(static_cast<RunwayThresholdNode&>(node));
+        else if (dynamic_cast<StartupLocationNode*>(&node))
+            apply(static_cast<StartupLocationNode&>(node));
+        else if (dynamic_cast<StopwayNode*>(&node))
+            apply(static_cast<StopwayNode&>(node));
+        else if (dynamic_cast<TaxiwayNode*>(&node))
+            apply(static_cast<TaxiwayNode&>(node));
+        else if (dynamic_cast<TerminalNode*>(&node))
+            apply(static_cast<TerminalNode&>(node));
+        else if (dynamic_cast<WindsockNode*>(&node))
+            apply(static_cast<WindsockNode&>(node));
+
+        traverse(node);
     }
 }
 
