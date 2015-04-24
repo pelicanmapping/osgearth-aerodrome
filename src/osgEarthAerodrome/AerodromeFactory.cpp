@@ -83,9 +83,13 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
             osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
             if (an.valid())
             {
-                // create new node and add to parent AerodromeNode
                 OE_NOTICE << LC << "Adding feature to aerodrome: " << icao << std::endl;
 
+                // expand aerodrome bounds
+                if (f->getGeometry())
+                    an->bounds().expandBy(f->getGeometry()->getBounds());
+
+                // create new node and add to parent AerodromeNode
                 an->addChild(new T(icao, f));
                 featureCount++;
             }

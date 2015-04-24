@@ -35,6 +35,7 @@
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/MatrixTransform>
+#include <osgEarth/ECEF>
 #include <osgEarth/ElevationQuery>
 #include <osgEarth/Registry>
 #include <osgEarthFeatures/Feature>
@@ -94,45 +95,36 @@ AerodromeRenderer::AerodromeRenderer(Map* map)
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
-    // reset bounds object for this new aerodrome we are about to travers
-    _bounds.init();
-
-    traverse(node);
-
-    if (_bounds.valid())
+    if (node.bounds().valid())
     {
-        // create ground geometry beneath the aerodrome
-        double elevation = 0.0;
+        // get a common elevation for the aerodrome
         ElevationQuery eq(_map.get());
-        eq.getElevation(GeoPoint(_map->getSRS(), _bounds.center().x(), _bounds.center().y()), elevation, 0.005);
-        
+        eq.getElevation(GeoPoint(_map->getSRS(), node.bounds().center().x(), node.bounds().center().y()), _elevation, 0.005);
+
+
+        // create a w2l matrix for the aerodrome
+        GeoPoint center(_map->getSRS(), node.bounds().center().x(), node.bounds().center().y(), _elevation, ALTMODE_ABSOLUTE);
+        center.createLocalToWorld(_local2world);
+        _world2local.invert(_local2world);
+
+
+        // create ground geometry beneath the aerodrome
         osg::Geometry* geometry = new osg::Geometry();
         geometry->setUseVertexBufferObjects( true );
         geometry->setUseDisplayList( false );
 
+        std::vector<osg::Vec3d> boundary;
+        boundary.push_back(osg::Vec3d(node.bounds().xMin(), node.bounds().yMin(), _elevation));
+        boundary.push_back(osg::Vec3d(node.bounds().xMax(), node.bounds().yMin(), _elevation));
+        boundary.push_back(osg::Vec3d(node.bounds().xMax(), node.bounds().yMax(), _elevation));
+        boundary.push_back(osg::Vec3d(node.bounds().xMin(), node.bounds().yMax(), _elevation));
+
+        //osg::Vec3Array* normals = new osg::Vec3Array();
         osg::Vec3Array* verts = new osg::Vec3Array();
-        verts->reserve( 4 );
+        transformAndLocalize(boundary, _map->getSRS(), verts, 0L);
 
-        osg::Vec3d w1;
-        GeoPoint gp1(_map->getSRS(), _bounds.xMin(), _bounds.yMin(), elevation);
-        gp1.toWorld(w1);
-
-        osg::Vec3d w2;
-        GeoPoint gp2(_map->getSRS(), _bounds.xMax(), _bounds.yMin(), elevation);
-        gp2.toWorld(w2);
-
-        osg::Vec3d w3;
-        GeoPoint gp3(_map->getSRS(), _bounds.xMax(), _bounds.yMax(), elevation);
-        gp3.toWorld(w3);
-
-        osg::Vec3d w4;
-        GeoPoint gp4(_map->getSRS(), _bounds.xMin(), _bounds.yMax(), elevation);
-        gp4.toWorld(w4);
-
-        verts->push_back(w1);
-        verts->push_back(w2);
-        verts->push_back(w3);
-        verts->push_back(w4);
+        osg::MatrixTransform* mt = new osg::MatrixTransform;
+        mt->setMatrix(_local2world);
 
         geometry->setVertexArray( verts );
 
@@ -158,13 +150,18 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        node.addChild(geode);
+        mt->addChild(geode);
+        node.addChild(mt);
 
 
         // create mask layer based on accumulated bounds
-        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(_bounds, _map.get()));
+        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _map.get()));
         node.setMaskLayer(mask);
         _map->addTerrainMaskLayer(mask);
+    }
+    else
+    {
+        _elevation = 0.0;
     }
 }
 
@@ -306,49 +303,32 @@ AerodromeRenderer::apply(WindsockNode& node)
 void
 AerodromeRenderer::apply(osg::Group& node)
 {
-    // accumulate the bounds
-    AerodromeFeatureNode* fnode = dynamic_cast<AerodromeFeatureNode*>(&node);
-    if (fnode)
-    {
-        Feature* f = fnode->getFeature();
-        if (f && f->getGeometry())
-        {
-            //TODO: make sure feature srs matches map srs (and/or do this in AerodromeFactory)
-            _bounds.expandBy(f->getGeometry()->getBounds());
-        }
-    }
-
     if (dynamic_cast<AerodromeNode*>(&node))
-    {
         apply(static_cast<AerodromeNode&>(node));
-    }
-    else
-    {
-        if (dynamic_cast<LightBeaconNode*>(&node))
-            apply(static_cast<LightBeaconNode&>(node));
-        else if (dynamic_cast<LightIndicatorNode*>(&node))
-            apply(static_cast<LightIndicatorNode&>(node));
-        else if (dynamic_cast<LinearFeatureNode*>(&node))
-            apply(static_cast<LinearFeatureNode&>(node));
-        else if (dynamic_cast<PavementNode*>(&node))
-            apply(static_cast<PavementNode&>(node));
-        else if (dynamic_cast<RunwayNode*>(&node))
-            apply(static_cast<RunwayNode&>(node));
-        else if (dynamic_cast<RunwayThresholdNode*>(&node))
-            apply(static_cast<RunwayThresholdNode&>(node));
-        else if (dynamic_cast<StartupLocationNode*>(&node))
-            apply(static_cast<StartupLocationNode&>(node));
-        else if (dynamic_cast<StopwayNode*>(&node))
-            apply(static_cast<StopwayNode&>(node));
-        else if (dynamic_cast<TaxiwayNode*>(&node))
-            apply(static_cast<TaxiwayNode&>(node));
-        else if (dynamic_cast<TerminalNode*>(&node))
-            apply(static_cast<TerminalNode&>(node));
-        else if (dynamic_cast<WindsockNode*>(&node))
-            apply(static_cast<WindsockNode&>(node));
+    else if (dynamic_cast<LightBeaconNode*>(&node))
+        apply(static_cast<LightBeaconNode&>(node));
+    else if (dynamic_cast<LightIndicatorNode*>(&node))
+        apply(static_cast<LightIndicatorNode&>(node));
+    else if (dynamic_cast<LinearFeatureNode*>(&node))
+        apply(static_cast<LinearFeatureNode&>(node));
+    else if (dynamic_cast<PavementNode*>(&node))
+        apply(static_cast<PavementNode&>(node));
+    else if (dynamic_cast<RunwayNode*>(&node))
+        apply(static_cast<RunwayNode&>(node));
+    else if (dynamic_cast<RunwayThresholdNode*>(&node))
+        apply(static_cast<RunwayThresholdNode&>(node));
+    else if (dynamic_cast<StartupLocationNode*>(&node))
+        apply(static_cast<StartupLocationNode&>(node));
+    else if (dynamic_cast<StopwayNode*>(&node))
+        apply(static_cast<StopwayNode&>(node));
+    else if (dynamic_cast<TaxiwayNode*>(&node))
+        apply(static_cast<TaxiwayNode&>(node));
+    else if (dynamic_cast<TerminalNode*>(&node))
+        apply(static_cast<TerminalNode&>(node));
+    else if (dynamic_cast<WindsockNode*>(&node))
+        apply(static_cast<WindsockNode&>(node));
 
-        traverse(node);
-    }
+    traverse(node);
 }
 
 osg::Node*
@@ -399,4 +379,18 @@ AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, f
     }
 
     return 0L;
+}
+
+void
+AerodromeRenderer::transformAndLocalize(const std::vector<osg::Vec3d>& input,
+                                        const SpatialReference*        inputSRS,
+                                        osg::Vec3Array*                output_verts,
+                                        osg::Vec3Array*                output_normals)
+{
+    output_verts->reserve( output_verts->size() + input.size() );
+
+    if ( output_normals )
+        output_normals->reserve( output_verts->size() );
+
+    ECEF::transformAndLocalize(input, inputSRS, output_verts, output_normals, _map->getSRS(), _world2local);
 }

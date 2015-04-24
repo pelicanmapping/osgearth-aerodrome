@@ -71,8 +71,15 @@ namespace osgEarth { namespace Aerodrome
 
     protected:
 
+        void transformAndLocalize(const std::vector<osg::Vec3d>& input,
+                                  const SpatialReference*        inputSRS,
+                                  osg::Vec3Array*                output_verts,
+                                  osg::Vec3Array*                output_normals);
+
         osg::ref_ptr<Map> _map;
-        osgEarth::Bounds _bounds;
+        double _elevation;
+        osg::Matrixd _world2local;
+        osg::Matrixd _local2world;
     };
 
 } } // namespace osgEarth::Aerodrome
