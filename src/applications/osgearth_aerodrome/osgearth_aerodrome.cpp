@@ -74,7 +74,7 @@ main(int argc, char** argv)
         {
             // create an AerodromeFactory to build the aerodromes from the catalog
             osgEarth::Aerodrome::AerodromeFactory factory(mapNode->getMap());
-            osg::Node* aeroRoot = factory.createAerodromes(osgEarth::URI("clean/clean_catalog.xml"));
+            osg::Node* aeroRoot = factory.createAerodromes(osgEarth::URI("3/catalog.xml"));
 
             // create an AerodromeRenderer (node visitor) to create the geometry
             osgEarth::Aerodrome::AerodromeRenderer renderer(mapNode->getMap());
