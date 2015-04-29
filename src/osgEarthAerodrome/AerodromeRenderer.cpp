@@ -97,15 +97,9 @@ AerodromeRenderer::apply(AerodromeNode& node)
 {
     if (node.bounds().valid())
     {
-        // get a common elevation for the aerodrome
-        ElevationQuery eq(_map.get());
-        eq.getElevation(GeoPoint(_map->getSRS(), node.bounds().center().x(), node.bounds().center().y()), _elevation, 0.005);
-
-
-        // create a w2l matrix for the aerodrome
-        GeoPoint center(_map->getSRS(), node.bounds().center().x(), node.bounds().center().y(), _elevation, ALTMODE_ABSOLUTE);
-        center.createLocalToWorld(_local2world);
-        _world2local.invert(_local2world);
+        // use the center of the bounds as an anchor for localization
+        GeoPoint center(_map->getSRS(), node.bounds().center().x(), node.bounds().center().y());
+        createLocalizations(center);
 
 
         // create ground geometry beneath the aerodrome
@@ -122,9 +116,6 @@ AerodromeRenderer::apply(AerodromeNode& node)
         //osg::Vec3Array* normals = new osg::Vec3Array();
         osg::Vec3Array* verts = new osg::Vec3Array();
         transformAndLocalize(boundary, _map->getSRS(), verts, 0L);
-
-        osg::MatrixTransform* mt = new osg::MatrixTransform;
-        mt->setMatrix(_local2world);
 
         geometry->setVertexArray( verts );
 
@@ -150,9 +141,9 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        mt->addChild(geode);
+        osg::MatrixTransform* mt = new osg::MatrixTransform();
+        mt->setMatrix(_local2world);
         node.addChild(mt);
-
 
         // create mask layer based on accumulated bounds
         osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _map.get()));
@@ -171,7 +162,7 @@ AerodromeRenderer::apply(LightBeaconNode& node)
     //TODO: create geometry for light beacon and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 4.0);
     if (geom)
         node.addChild(geom);
 
@@ -183,7 +174,7 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
     //TODO: create geometry for light indicator and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 4.0);
     if (geom)
         node.addChild(geom);
 
@@ -195,7 +186,7 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
     //TODO: create geometry for linear feature and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 1.5);
     if (geom)
         node.addChild(geom);
 
@@ -207,7 +198,7 @@ AerodromeRenderer::apply(PavementNode& node)
     //TODO: create geometry for pavement and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 0.0);
     if (geom)
         node.addChild(geom);
 
@@ -219,13 +210,12 @@ AerodromeRenderer::apply(RunwayNode& node)
     //TODO: create geometry for runway and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 1000.0);
     if (geom)
     {
         geom->setName(node.icao() + "_RUNWAY_" + osgEarth::toString(feature->getFID()));
         node.addChild(geom);
     }
-
 }
 
 void
@@ -234,7 +224,7 @@ AerodromeRenderer::apply(RunwayThresholdNode& node)
     //TODO: create geometry for runway threshold and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(),  3.0);
     if (geom)
         node.addChild(geom);
 
@@ -246,7 +236,7 @@ AerodromeRenderer::apply(StartupLocationNode& node)
     //TODO: create geometry for startup location and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 3.0);
     if (geom)
         node.addChild(geom);
 
@@ -258,7 +248,7 @@ AerodromeRenderer::apply(StopwayNode& node)
     //TODO: create geometry for stopway and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 3.0);
     if (geom)
         node.addChild(geom);
 
@@ -270,7 +260,7 @@ AerodromeRenderer::apply(TaxiwayNode& node)
     //TODO: create geometry for taxiway and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 1.0);
     if (geom)
         node.addChild(geom);
 
@@ -282,7 +272,7 @@ AerodromeRenderer::apply(TerminalNode& node)
     //TODO: create geometry for terminal and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 3.0);
     if (geom)
         node.addChild(geom);
 
@@ -294,7 +284,7 @@ AerodromeRenderer::apply(WindsockNode& node)
     //TODO: create geometry for windsock and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get());
+    osg::Node* geom = randomFeatureRenderer(feature.get(), 4.0);
     if (geom)
         node.addChild(geom);
 
@@ -332,7 +322,7 @@ AerodromeRenderer::apply(osg::Group& node)
 }
 
 osg::Node*
-AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, float height)
+AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, double verticalOffset, float height)
 {
     if (feature && _map.valid())
     {
@@ -368,9 +358,9 @@ AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, f
             style.getOrCreate<ExtrusionSymbol>()->height() = height;
         }
 
-        style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_TO_TERRAIN;
-        style.getOrCreate<AltitudeSymbol>()->verticalOffset() = 20.0f;
-        style.getOrCreate<RenderSymbol>()->depthOffset()->minBias() = 3.6f;
+        style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
+        style.getOrCreate<AltitudeSymbol>()->verticalOffset() = _elevation;
+        style.getOrCreate<RenderSymbol>()->depthOffset()->minBias() = verticalOffset;
         style.getOrCreate<RenderSymbol>()->depthOffset()->automatic() = false;
 
         GeometryCompiler compiler;
@@ -379,6 +369,19 @@ AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, f
     }
 
     return 0L;
+}
+
+void
+AerodromeRenderer::createLocalizations(const GeoPoint& anchor)
+{
+        // get a common elevation for the aerodrome
+        ElevationQuery eq(_map.get());
+        eq.getElevation(anchor, _elevation, 0.005);
+
+        // create a w2l matrix for the aerodrome
+        GeoPoint p(anchor.getSRS(), anchor.x(), anchor.y(), _elevation, ALTMODE_ABSOLUTE);
+        p.createLocalToWorld(_local2world);
+        _world2local.invert(_local2world);
 }
 
 void

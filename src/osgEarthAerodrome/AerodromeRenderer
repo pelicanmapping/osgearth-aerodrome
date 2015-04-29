@@ -67,9 +67,11 @@ namespace osgEarth { namespace Aerodrome
 
         virtual void apply(osg::Group& node);
 
-        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, float height=-1.0f);
+        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, double verticalOffset=0.0, float height=-1.0f);
 
     protected:
+
+        void createLocalizations(const GeoPoint& anchor);
 
         void transformAndLocalize(const std::vector<osg::Vec3d>& input,
                                   const SpatialReference*        inputSRS,
