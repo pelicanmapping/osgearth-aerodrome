@@ -291,6 +291,72 @@ AerodromeRenderer::apply(WindsockNode& node)
 }
 
 void
+AerodromeRenderer::apply(LightBeaconGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(LightIndicatorGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(LinearFeatureGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(PavementGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(RunwayGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(RunwayThresholdGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(StartupLocationGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(StopwayGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(TaxiwayGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(TerminalGroup& group)
+{
+    //nop
+}
+
+void
+AerodromeRenderer::apply(WindsockGroup& group)
+{
+    //nop
+}
+
+void
 AerodromeRenderer::apply(osg::Group& node)
 {
     if (dynamic_cast<AerodromeNode*>(&node))
@@ -317,6 +383,28 @@ AerodromeRenderer::apply(osg::Group& node)
         apply(static_cast<TerminalNode&>(node));
     else if (dynamic_cast<WindsockNode*>(&node))
         apply(static_cast<WindsockNode&>(node));
+    else if (dynamic_cast<LightBeaconGroup*>(&node))
+        apply(static_cast<LightBeaconGroup&>(node));
+    else if (dynamic_cast<LightIndicatorGroup*>(&node))
+        apply(static_cast<LightIndicatorGroup&>(node));
+    else if (dynamic_cast<LinearFeatureGroup*>(&node))
+        apply(static_cast<LinearFeatureGroup&>(node));
+    else if (dynamic_cast<PavementGroup*>(&node))
+        apply(static_cast<PavementGroup&>(node));
+    else if (dynamic_cast<RunwayGroup*>(&node))
+        apply(static_cast<RunwayGroup&>(node));
+    else if (dynamic_cast<RunwayThresholdGroup*>(&node))
+        apply(static_cast<RunwayThresholdGroup&>(node));
+    else if (dynamic_cast<StartupLocationGroup*>(&node))
+        apply(static_cast<StartupLocationGroup&>(node));
+    else if (dynamic_cast<StopwayGroup*>(&node))
+        apply(static_cast<StopwayGroup&>(node));
+    else if (dynamic_cast<TaxiwayGroup*>(&node))
+        apply(static_cast<TaxiwayGroup&>(node));
+    else if (dynamic_cast<TerminalGroup*>(&node))
+        apply(static_cast<TerminalGroup&>(node));
+    else if (dynamic_cast<WindsockGroup*>(&node))
+        apply(static_cast<WindsockGroup&>(node));
 
     traverse(node);
 }

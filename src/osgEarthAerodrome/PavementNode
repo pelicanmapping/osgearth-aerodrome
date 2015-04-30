@@ -32,7 +32,7 @@ namespace osgEarth { namespace Aerodrome
     using namespace osgEarth::Features;
 
     /**
-     * Taxiway
+     * Pavement
      */
     class OSGEARTHAERODROME_EXPORT PavementNode : public AerodromeFeatureNode
     {
@@ -40,6 +40,15 @@ namespace osgEarth { namespace Aerodrome
         PavementNode(const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(icao, feature) { }
 
         virtual ~PavementNode() { }
+    };
+
+
+    class OSGEARTHAERODROME_EXPORT PavementGroup : public osg::Group
+    {
+    public:
+        PavementGroup() { }
+
+        virtual ~PavementGroup() { }
     };
 
 } } // namespace osgEarth::Aerodrome

@@ -42,6 +42,15 @@ namespace osgEarth { namespace Aerodrome
         virtual ~LinearFeatureNode() { }
     };
 
+
+    class OSGEARTHAERODROME_EXPORT LinearFeatureGroup : public osg::Group
+    {
+    public:
+        LinearFeatureGroup() { }
+
+        virtual ~LinearFeatureGroup() { }
+    };
+
 } } // namespace osgEarth::Aerodrome
 
 #endif // OSGEARTH_AERODROME_LINEARFEATURENODE

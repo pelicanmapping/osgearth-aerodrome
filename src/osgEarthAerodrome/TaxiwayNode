@@ -42,6 +42,15 @@ namespace osgEarth { namespace Aerodrome
         virtual ~TaxiwayNode() { }
     };
 
+
+    class OSGEARTHAERODROME_EXPORT TaxiwayGroup : public osg::Group
+    {
+    public:
+        TaxiwayGroup() { }
+
+        virtual ~TaxiwayGroup() { }
+    };
+
 } } // namespace osgEarth::Aerodrome
 
 #endif // OSGEARTH_AERODROME_TAXIWAYNODE

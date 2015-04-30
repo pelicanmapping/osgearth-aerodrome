@@ -50,7 +50,7 @@ AerodromeFactory::AerodromeFactory(Map* map)
     //nop
 }
 
-template <typename T>
+template <typename T, typename Y>
 void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options)
 {
     if (!featureOpts.featureOptions().isSet())
@@ -64,6 +64,8 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
     OE_NOTICE << LC << "Reading features...\n";
 
     int featureCount = 0;
+
+    std::map<std::string, Y*> groupNodes;
 
     osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor();
     while ( cursor.valid() && cursor->hasMore() )
@@ -83,16 +85,33 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
             osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
             if (an.valid())
             {
-                OE_NOTICE << LC << "Adding feature to aerodrome: " << icao << std::endl;
+                Y* parentGroup = 0L;
 
-                // expand aerodrome bounds
-                if (f->getGeometry())
-                    an->bounds().expandBy(f->getGeometry()->getBounds());
+                std::map<std::string, Y*>::iterator itr = groupNodes.find(icao);
+                if (itr != groupNodes.end())
+                {
+                    parentGroup = itr->second;
+                }
+                else
+                {
+                    parentGroup = new Y();
+                    groupNodes[icao] = parentGroup;
+                    an->addChild(parentGroup);
+                }
 
-                // create new node and add to parent AerodromeNode
-                an->addChild(new T(icao, f));
-                featureCount++;
-            }
+                if (parentGroup)
+                {
+                    OE_NOTICE << LC << "Adding feature to aerodrome: " << icao << std::endl;
+
+                    // expand aerodrome bounds
+                    if (f->getGeometry())
+                        an->bounds().expandBy(f->getGeometry()->getBounds());
+
+                    // create new node and add to parent AerodromeNode
+                    parentGroup->addChild(new T(icao, f));
+                    featureCount++;
+                }
+            }            
         }
         else
         {
@@ -123,37 +142,37 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
     AerodromeContext context;
 
     if (catalog->lightBeaconOptions().isSet())
-        createFeatureNodes<LightBeaconNode>(catalog->lightBeaconOptions().value(), context, options);
+        createFeatureNodes<LightBeaconNode, LightBeaconGroup>(catalog->lightBeaconOptions().value(), context, options);
 
     if (catalog->lightIndicatorOptions().isSet())
-        createFeatureNodes<LightIndicatorNode>(catalog->lightIndicatorOptions().value(), context, options);
+        createFeatureNodes<LightIndicatorNode, LightIndicatorGroup>(catalog->lightIndicatorOptions().value(), context, options);
 
     if (catalog->linearFeatureOptions().isSet())
-        createFeatureNodes<LinearFeatureNode>(catalog->linearFeatureOptions().value(), context, options);
+        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup>(catalog->linearFeatureOptions().value(), context, options);
 
     if (catalog->pavementOptions().isSet())
-        createFeatureNodes<PavementNode>(catalog->pavementOptions().value(), context, options);
+        createFeatureNodes<PavementNode, PavementGroup>(catalog->pavementOptions().value(), context, options);
 
     if (catalog->runwayOptions().isSet())
-        createFeatureNodes<RunwayNode>(catalog->runwayOptions().value(), context, options);
+        createFeatureNodes<RunwayNode, RunwayGroup>(catalog->runwayOptions().value(), context, options);
 
     if (catalog->runwayThresholdOptions().isSet())
-        createFeatureNodes<RunwayThresholdNode>(catalog->runwayThresholdOptions().value(), context, options);
+        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup>(catalog->runwayThresholdOptions().value(), context, options);
 
     if (catalog->startupLocationOptions().isSet())
-        createFeatureNodes<StartupLocationNode>(catalog->startupLocationOptions().value(), context, options);
+        createFeatureNodes<StartupLocationNode, StartupLocationGroup>(catalog->startupLocationOptions().value(), context, options);
 
     if (catalog->stopwayOptions().isSet())
-        createFeatureNodes<StopwayNode>(catalog->stopwayOptions().value(), context, options);
+        createFeatureNodes<StopwayNode, StopwayGroup>(catalog->stopwayOptions().value(), context, options);
 
     if (catalog->taxiwayOptions().isSet())
-        createFeatureNodes<TaxiwayNode>(catalog->taxiwayOptions().value(), context, options);
+        createFeatureNodes<TaxiwayNode, TaxiwayGroup>(catalog->taxiwayOptions().value(), context, options);
 
     if (catalog->terminalOptions().isSet())
-        createFeatureNodes<TerminalNode>(catalog->terminalOptions().value(), context, options);
+        createFeatureNodes<TerminalNode, TerminalGroup>(catalog->terminalOptions().value(), context, options);
 
     if (catalog->windsockOptions().isSet())
-        createFeatureNodes<WindsockNode>(catalog->windsockOptions().value(), context, options);
+        createFeatureNodes<WindsockNode, WindsockGroup>(catalog->windsockOptions().value(), context, options);
 
     OE_NOTICE << LC << "Created " << context.aerodromes.size() << " aerodromes." << std::endl;
 

@@ -42,7 +42,14 @@ namespace osgEarth { namespace Aerodrome
         virtual ~RunwayNode() { }
     };
 
-    typedef std::vector< osg::ref_ptr<RunwayNode> > RunwayNodeVector;
+
+    class OSGEARTHAERODROME_EXPORT RunwayGroup : public osg::Group
+    {
+    public:
+        RunwayGroup() { }
+
+        virtual ~RunwayGroup() { }
+    };
 
 } } // namespace osgEarth::Aerodrome
 

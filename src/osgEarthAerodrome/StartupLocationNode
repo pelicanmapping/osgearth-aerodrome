@@ -32,7 +32,7 @@ namespace osgEarth { namespace Aerodrome
     using namespace osgEarth::Features;
 
     /**
-     * Taxiway
+     * StartupLocation
      */
     class OSGEARTHAERODROME_EXPORT StartupLocationNode : public AerodromeFeatureNode
     {
@@ -40,6 +40,15 @@ namespace osgEarth { namespace Aerodrome
         StartupLocationNode(const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(icao, feature) { }
 
         virtual ~StartupLocationNode() { }
+    };
+
+
+    class OSGEARTHAERODROME_EXPORT StartupLocationGroup : public osg::Group
+    {
+    public:
+        StartupLocationGroup() { }
+
+        virtual ~StartupLocationGroup() { }
     };
 
 } } // namespace osgEarth::Aerodrome

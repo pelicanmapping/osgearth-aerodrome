@@ -32,7 +32,7 @@ namespace osgEarth { namespace Aerodrome
     using namespace osgEarth::Features;
 
     /**
-     * Taxiway
+     * Windsock
      */
     class OSGEARTHAERODROME_EXPORT WindsockNode : public AerodromeFeatureNode
     {
@@ -40,6 +40,15 @@ namespace osgEarth { namespace Aerodrome
         WindsockNode(const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(icao, feature) { }
 
         virtual ~WindsockNode() { }
+    };
+
+
+    class OSGEARTHAERODROME_EXPORT WindsockGroup : public osg::Group
+    {
+    public:
+        WindsockGroup() { }
+
+        virtual ~WindsockGroup() { }
     };
 
 } } // namespace osgEarth::Aerodrome

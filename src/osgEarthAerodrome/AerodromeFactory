@@ -86,7 +86,7 @@ namespace osgEarth { namespace Aerodrome
 
         //void createRunways(AerodromeFeatureOptions runwayOpts, AerodromeContext& context, const osgDB::Options* options);
 
-        template <typename T> void createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options);
+        template <typename T, typename Y> void createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options);
 
 /* ********** TEMPORARY ********** */
         osg::ref_ptr<Map> _map;

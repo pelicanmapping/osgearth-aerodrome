@@ -32,7 +32,7 @@ namespace osgEarth { namespace Aerodrome
     using namespace osgEarth::Features;
 
     /**
-     * Taxiway
+     * LightBeacon
      */
     class OSGEARTHAERODROME_EXPORT LightBeaconNode : public AerodromeFeatureNode
     {
@@ -40,6 +40,15 @@ namespace osgEarth { namespace Aerodrome
         LightBeaconNode(const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(icao, feature) { }
 
         virtual ~LightBeaconNode() { }
+    };
+
+    
+    class OSGEARTHAERODROME_EXPORT LightBeaconGroup : public osg::Group
+    {
+    public:
+        LightBeaconGroup() { }
+
+        virtual ~LightBeaconGroup() { }
     };
 
 } } // namespace osgEarth::Aerodrome

@@ -59,7 +59,7 @@ namespace osgEarth { namespace Aerodrome
 
     typedef std::vector< osg::ref_ptr<AerodromeNode> > AerodromeNodeVector;
 
-    typedef std::map<std::string, osg::ref_ptr<AerodromeNode> > AerodromeNodeMap;
+    typedef std::map< std::string, osg::ref_ptr<AerodromeNode> > AerodromeNodeMap;
 
 } } // namespace osgEarth::Aerodrome
 

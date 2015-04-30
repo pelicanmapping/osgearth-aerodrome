@@ -65,6 +65,18 @@ namespace osgEarth { namespace Aerodrome
         virtual void apply(TerminalNode& node);
         virtual void apply(WindsockNode& node);
 
+        virtual void apply(LightBeaconGroup& group);
+        virtual void apply(LightIndicatorGroup& group);
+        virtual void apply(LinearFeatureGroup& group);
+        virtual void apply(PavementGroup& group);
+        virtual void apply(RunwayGroup& group);
+        virtual void apply(RunwayThresholdGroup& group);
+        virtual void apply(StartupLocationGroup& group);
+        virtual void apply(StopwayGroup& group);
+        virtual void apply(TaxiwayGroup& group);
+        virtual void apply(TerminalGroup& group);
+        virtual void apply(WindsockGroup& group);
+
         virtual void apply(osg::Group& node);
 
         osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, double verticalOffset=0.0, float height=-1.0f);

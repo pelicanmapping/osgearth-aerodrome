@@ -32,7 +32,7 @@ namespace osgEarth { namespace Aerodrome
     using namespace osgEarth::Features;
 
     /**
-     * Taxiway
+     * Terminal
      */
     class OSGEARTHAERODROME_EXPORT TerminalNode : public AerodromeFeatureNode
     {
@@ -40,6 +40,15 @@ namespace osgEarth { namespace Aerodrome
         TerminalNode(const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(icao, feature) { }
 
         virtual ~TerminalNode() { }
+    };
+
+
+    class OSGEARTHAERODROME_EXPORT TerminalGroup : public osg::Group
+    {
+    public:
+        TerminalGroup() { }
+
+        virtual ~TerminalGroup() { }
     };
 
 } } // namespace osgEarth::Aerodrome
