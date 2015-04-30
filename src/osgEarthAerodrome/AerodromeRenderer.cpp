@@ -143,6 +143,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
+        mt->addChild(geode);
         node.addChild(mt);
 
         // create mask layer based on accumulated bounds
