@@ -21,6 +21,7 @@
 #include "Common"
 #include "AerodromeNode"
 #include "AerodromeCatalog"
+#include "BoundaryNode"
 #include "LightBeaconNode"
 #include "LightIndicatorNode"
 #include "LinearFeatureNode"
@@ -122,6 +123,58 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
     OE_NOTICE << LC << featureCount << " feature nodes created." << std::endl;
 }
 
+void AerodromeFactory::createBoundaryNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options)
+{
+    if (!featureOpts.featureOptions().isSet())
+    {
+        OE_WARN << LC << "Cannot create feature: feature source is not set." << std::endl;
+    }
+
+    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
+    featureSource->initialize(options);
+    
+    OE_NOTICE << LC << "Reading features...\n";
+
+    int featureCount = 0;
+
+    osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor();
+    while ( cursor.valid() && cursor->hasMore() )
+    {
+        Feature* f = cursor->nextFeature();
+
+        /* **************************************** */
+        /* Necessary but not sure why               */
+
+        const SpatialReference* ecefSRS = f->getSRS()->getGeographicSRS()->getECEF();
+
+        /* **************************************** */
+
+        std::string icao = f->getString(featureOpts.icaoAttr().value());
+        if (!icao.empty())
+        {
+            osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
+            if (an.valid())
+            {
+                OE_NOTICE << LC << "Adding boundary to aerodrome: " << icao << std::endl;
+
+                // expand aerodrome bounds
+                if (f->getGeometry())
+                    an->bounds().expandBy(f->getGeometry()->getBounds());
+
+                // create new node and add to parent AerodromeNode
+                an->setBoundary(new BoundaryNode(icao, f));
+                featureCount++;
+            }            
+        }
+        else
+        {
+            OE_WARN << LC << "Skipping feature with empty icao code" << std::endl;
+        }
+    }
+
+    OE_NOTICE << LC << featureCount << " boundary nodes created." << std::endl;
+}
+
 //void
 //AerodromeFactory::createRunways(AerodromeFeatureOptions runwayOpts, AerodromeContext &context, const osgDB::Options* options)
 //{
@@ -140,6 +193,9 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
     OE_NOTICE << LC << "Creating aerodromes..." << std::endl;
 
     AerodromeContext context;
+
+    if (catalog->boundaryOptions().isSet())
+        createBoundaryNodes(catalog->boundaryOptions().value(), context, options);
 
     if (catalog->lightBeaconOptions().isSet())
         createFeatureNodes<LightBeaconNode, LightBeaconGroup>(catalog->lightBeaconOptions().value(), context, options);

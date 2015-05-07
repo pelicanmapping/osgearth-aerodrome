@@ -40,6 +40,9 @@ AerodromeCatalog::fromConfig(const Config& conf)
 {
     conf.getIfSet("version", _version);
 
+    if ( conf.hasChild("boundaries") )
+        _boundaryOptions->merge( conf.child("boundaries") );
+
     if ( conf.hasChild("light_beacons") )
         _lightBeaconOptions->merge( conf.child("light_beacons") );
 
@@ -80,6 +83,7 @@ AerodromeCatalog::getConfig() const
 {
     Config conf;
     conf.addIfSet("version", _version);
+    conf.updateObjIfSet( "boundaries", _boundaryOptions );
     conf.updateObjIfSet( "light_beacons", _lightBeaconOptions );
     conf.updateObjIfSet( "light_indicators", _lightIndicatorOptions );
     conf.updateObjIfSet( "linear_features", _linearFeatureOptions );

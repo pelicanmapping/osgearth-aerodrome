@@ -79,8 +79,6 @@ namespace osgEarth { namespace Aerodrome
 
         virtual void apply(osg::Group& node);
 
-        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, double verticalOffset=0.0, float height=-1.0f);
-
     protected:
 
         void createLocalizations(const GeoPoint& anchor);
@@ -89,6 +87,9 @@ namespace osgEarth { namespace Aerodrome
                                   const SpatialReference*        inputSRS,
                                   osg::Vec3Array*                output_verts,
                                   osg::Vec3Array*                output_normals);
+
+        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, float height=-1.0f);
+        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, const Color& color, float height=-1.0f);
 
         osg::ref_ptr<Map> _map;
         double _elevation;

@@ -47,6 +47,9 @@ namespace osgEarth { namespace Aerodrome
 
     public: // properties
 
+        optional<AerodromeFeatureOptions>& boundaryOptions() { return _boundaryOptions; }
+        const optional<AerodromeFeatureOptions>& boundaryOptions() const { return _boundaryOptions; }
+
         optional<AerodromeFeatureOptions>& lightBeaconOptions() { return _lightBeaconOptions; }
         const optional<AerodromeFeatureOptions>& lightBeaconOptions() const { return _lightBeaconOptions; }
 
@@ -96,6 +99,7 @@ namespace osgEarth { namespace Aerodrome
     protected:
 
         optional<int> _version;
+        optional<AerodromeFeatureOptions> _boundaryOptions;
         optional<AerodromeFeatureOptions> _lightBeaconOptions;
         optional<AerodromeFeatureOptions> _lightIndicatorOptions;
         optional<AerodromeFeatureOptions> _linearFeatureOptions;
