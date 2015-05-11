@@ -88,11 +88,11 @@ namespace
         osg::ref_ptr<Map> _map;
     };
 
-    class FeatureMaskSource : public MaskSource
+    class FlatFeatureMaskSource : public MaskSource
     {
     public:
-        FeatureMaskSource(Feature* feature, Map* map)
-            : MaskSource(), _feature(feature), _map(map)
+        FlatFeatureMaskSource(Feature* feature, double elevation, Map* map)
+            : MaskSource(), _feature(feature), _elevation(elevation), _map(map)
         {
         }
 
@@ -104,7 +104,7 @@ namespace
                 //if (!srs->isEquivalentTo(_feature->getSRS()))
                 //{
                 //    FilterContext cx;
-                //    cx.setProfile( new FeatureProfile(_feature->gegetExtent()) );
+                //    cx.setProfile( new FeatureProfile(_feature->getExtent()) );
 
                 //    TransformFilter xform( srs );
                 //    FeatureList featureList;
@@ -112,16 +112,11 @@ namespace
                 //    cx = xform.push(featureList, cx);
                 //}
 
-                double elevation = 0.0;
-
-                ElevationQuery eq(_map.get());
-                eq.getElevation(GeoPoint(_map->getSRS(), _feature->getGeometry()->getBounds().center().x(), _feature->getGeometry()->getBounds().center().y()), elevation, 0.005);
-
                 osg::Vec3dArray* boundary = _feature->getGeometry()->toVec3dArray();
                 if (boundary && boundary->size() > 0)
                 {
                     for (int i=0; i < boundary->size(); i++)
-                        (*boundary)[i].z() = elevation;
+                        (*boundary)[i].z() = _elevation;
 
                     return boundary;
                 }
@@ -132,6 +127,7 @@ namespace
 
     private:
         osg::ref_ptr<Feature> _feature;
+        double _elevation;
         osg::ref_ptr<Map> _map;
     };
 }
@@ -207,7 +203,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
 
         // create mask layer based on boundary
-        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FeatureMaskSource(boundary->getFeature(), _map.get()));
+        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
         node.setMaskLayer(mask);
         _map->addTerrainMaskLayer(mask);
     }
