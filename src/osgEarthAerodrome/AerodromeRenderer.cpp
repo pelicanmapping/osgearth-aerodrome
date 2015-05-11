@@ -58,8 +58,8 @@ namespace
     class BoundingBoxMaskSource : public MaskSource
     {
     public:
-        BoundingBoxMaskSource(osgEarth::Bounds bounds, Map* map)
-          : MaskSource(), _bounds(bounds), _map(map)
+        BoundingBoxMaskSource(osgEarth::Bounds bounds, double elevation, Map* map)
+          : MaskSource(), _bounds(bounds), _elevation(elevation), _map(map)
         {
         }
 
@@ -69,15 +69,10 @@ namespace
 
             if (_map.valid())
             {
-                double elevation = 0.0;
-
-                ElevationQuery eq(_map.get());
-                eq.getElevation(GeoPoint(_map->getSRS(), _bounds.center().x(), _bounds.center().y()), elevation, 0.005);
-            
-                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMin(), elevation));
-                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMin(), elevation));
-                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMax(), elevation));
-                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMax(), elevation));
+                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMin(), _elevation));
+                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMin(), _elevation));
+                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMax(), _elevation));
+                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMax(), _elevation));
             }
 
             return boundary;
@@ -85,6 +80,7 @@ namespace
 
     private:
         osgEarth::Bounds _bounds;
+        double _elevation;
         osg::ref_ptr<Map> _map;
     };
 
@@ -262,7 +258,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
         node.addChild(mt);
 
         // create mask layer based on accumulated bounds
-        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _map.get()));
+        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _elevation, _map.get()));
         node.setMaskLayer(mask);
         _map->addTerrainMaskLayer(mask);
     }
@@ -394,7 +390,7 @@ AerodromeRenderer::apply(TerminalNode& node)
     //TODO: create geometry for terminal and add to node
 
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = randomFeatureRenderer(feature.get(), Color::Black);
+    osg::Node* geom = randomFeatureRenderer(feature.get(), Color::Red, 20.0);
     if (geom)
         node.addChild(geom);
 
