@@ -26,8 +26,8 @@ using namespace osgEarth::Features;
 using namespace osgEarth::Aerodrome;
 
 
-RunwayNode::RunwayNode(const std::string& icao, Feature* feature)
-  : AerodromeFeatureNode(icao, feature)
+RunwayNode::RunwayNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature)
+  : AerodromeFeatureNode(options, icao, feature)
 {
     //nop
 }

@@ -57,6 +57,7 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
     if (!featureOpts.featureOptions().isSet())
     {
         OE_WARN << LC << "Cannot create feature: feature source is not set." << std::endl;
+        return;
     }
 
     osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
@@ -109,7 +110,7 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
                         an->bounds().expandBy(f->getGeometry()->getBounds());
 
                     // create new node and add to parent AerodromeNode
-                    parentGroup->addChild(new T(icao, f));
+                    parentGroup->addChild(new T(featureOpts, icao, f));
                     featureCount++;
                 }
             }            
@@ -162,7 +163,7 @@ void AerodromeFactory::createBoundaryNodes(AerodromeFeatureOptions featureOpts, 
                     an->bounds().expandBy(f->getGeometry()->getBounds());
 
                 // create new node and add to parent AerodromeNode
-                an->setBoundary(new BoundaryNode(icao, f));
+                an->setBoundary(new BoundaryNode(featureOpts, icao, f));
                 featureCount++;
             }            
         }

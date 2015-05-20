@@ -37,7 +37,7 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT LightIndicatorNode : public AerodromeFeatureNode
     {
     public:
-        LightIndicatorNode(const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(icao, feature) { }
+        LightIndicatorNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature) { }
 
         virtual ~LightIndicatorNode() { }
     };

@@ -37,7 +37,7 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT TaxiwayNode : public AerodromeFeatureNode
     {
     public:
-        TaxiwayNode(const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(icao, feature) { }
+        TaxiwayNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature) { }
 
         virtual ~TaxiwayNode() { }
     };

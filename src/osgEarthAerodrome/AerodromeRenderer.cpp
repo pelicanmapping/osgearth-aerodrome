@@ -19,6 +19,7 @@
 
 #include "AerodromeRenderer"
 #include "Common"
+#include "AerodromeFeatureOptions"
 #include "AerodromeNode"
 #include "LightBeaconNode"
 #include "LightIndicatorNode"
@@ -129,8 +130,8 @@ namespace
 }
 
 
-AerodromeRenderer::AerodromeRenderer(Map* map)
-  : _map(map), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+AerodromeRenderer::AerodromeRenderer(Map* map, const osgDB::Options* options)
+  : _map(map), _dbOptions(options), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
     //nop
 }
@@ -138,7 +139,7 @@ AerodromeRenderer::AerodromeRenderer(Map* map)
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
-  if (node.getBoundary() && node.getBoundary()->getFeature()->getGeometry())
+    if (node.getBoundary() && node.getBoundary()->getFeature()->getGeometry())
     {
         osg::ref_ptr<BoundaryNode> boundary = node.getBoundary();
         osg::ref_ptr<Geometry> featureGeom = boundary->getFeature()->getGeometry();
@@ -151,7 +152,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
         // create ground geometry beneath the aerodrome
         osg::Geometry* geometry = new osg::Geometry();
         geometry->setUseVertexBufferObjects( true );
-        geometry->setUseDisplayList( false );
+        //geometry->setUseDisplayList( false );
 
         std::vector<osg::Vec3d> boundaryPoints;
         
@@ -196,8 +197,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
         mt->setMatrix(_local2world);
         mt->addChild(geode);
         node.addChild(mt);
-
-
+        
         // create mask layer based on boundary
         osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
         node.setMaskLayer(mask);
@@ -309,8 +309,6 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
 void
 AerodromeRenderer::apply(PavementNode& node)
 {
-    //TODO: create geometry for pavement and add to node
-
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = randomFeatureRenderer(feature.get(), Color(0.6f,0.6f,0.6f,1.0f));
     if (geom)
@@ -318,13 +316,124 @@ AerodromeRenderer::apply(PavementNode& node)
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
         node.addChild(geom);
     }
-
 }
 
 void
 AerodromeRenderer::apply(RunwayNode& node)
 {
-    // nop
+    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+
+    osg::ref_ptr<osg::Node> geom;
+
+    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
+    if (geomPoints && geomPoints->size() == 4)
+    {
+        std::vector<osg::Vec3d> featurePoints;
+        for (int i=0; i < geomPoints->size(); i++)
+            featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+     
+        //osg::Vec3Array* normals = new osg::Vec3Array();
+        osg::Vec3Array* verts = new osg::Vec3Array();
+        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+
+        osg::Geometry* geometry = new osg::Geometry();
+        geometry->setVertexArray( verts );
+
+        osg::Vec4Array* colors = new osg::Vec4Array;
+
+        if (node.getOptions().textureOptions().isSet() && node.getOptions().textureOptions()->url().isSet())
+        {
+            osg::Image* tex = node.getOptions().textureOptions()->url()->getImage(_dbOptions);
+            if (tex)
+            {
+                osg::Texture2D* _texture = new osg::Texture2D(tex);     
+                _texture->setWrap(_texture->WRAP_S, _texture->CLAMP_TO_EDGE);
+                _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
+                _texture->setResizeNonPowerOfTwoHint(false);
+                geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
+
+                osg::Vec2Array* tcoords = new osg::Vec2Array(4);
+
+                float side1 = ((*verts)[1] - (*verts)[0]).length();
+                float side2 = ((*verts)[2] - (*verts)[1]).length();
+
+                // texture length setting not used infavor of preserving original aspect ratio
+                //float repeat = 1.0f;
+                //if (node.getOptions().textureOptions()->length().isSet())
+                //{
+                    float width = osg::minimum(side1, side2);
+                    float scale = width / tex->getPixelAspectRatio();
+
+                    float length = osg::maximum(side1, side2);
+                    float repeat = length / scale;
+                //}
+
+                if (side1 > side2)
+                {
+                    (*tcoords)[3].set(0.0f,0.0f);
+                    (*tcoords)[0].set(1.0f,0.0f);
+                    (*tcoords)[1].set(1.0f,repeat);
+                    (*tcoords)[2].set(0.0f,repeat);
+                }
+                else
+                {
+                    (*tcoords)[0].set(0.0f,0.0f);
+                    (*tcoords)[1].set(1.0f,0.0f);
+                    (*tcoords)[2].set(1.0f,repeat);
+                    (*tcoords)[3].set(0.0f,repeat);
+                }
+            
+                geometry->setTexCoordArray(0,tcoords);
+            }
+            else
+            {
+                OE_WARN << LC << "Error reading texture file: " << node.getOptions().textureOptions()->url()->full() << std::endl;
+            }
+
+
+
+            colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
+        }
+        else
+        {
+            colors->push_back(osg::Vec4(0.4f,0.4f,0.4f,1.0f));
+        }
+
+        geometry->setColorArray(colors);
+        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+        geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
+
+        //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
+        geometry->setName(node.icao() + "_AERODROME_RUNWAY");
+
+        //osgEarth::Tessellator tess;
+        //tess.tessellateGeometry(*geometry);
+
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        geode->addDrawable(geometry);
+
+        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+
+        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 2.0, 1.0 ), osg::StateAttribute::ON );
+
+        osg::MatrixTransform* mt = new osg::MatrixTransform();
+        mt->setMatrix(_local2world);
+        mt->addChild(geode);
+
+        geom = mt;
+    }
+    else
+    {
+        geom = randomFeatureRenderer(feature.get(), Color(0.4, 0.4, 0.4, 1.0));
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 2.0, 1.0 ), osg::StateAttribute::ON );
+    }
+
+    if (geom.valid())
+    {
+        //geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 2.0, 1.0 ), osg::StateAttribute::ON );
+        node.addChild(geom);
+    }
 }
 
 void
@@ -372,8 +481,6 @@ AerodromeRenderer::apply(StopwayNode& node)
 void
 AerodromeRenderer::apply(TaxiwayNode& node)
 {
-    //TODO: create geometry for taxiway and add to node
-
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = randomFeatureRenderer(feature.get(), Color(0.6f,0.6f,0.6f,1.0f));
     if (geom)
@@ -381,7 +488,6 @@ AerodromeRenderer::apply(TaxiwayNode& node)
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
         node.addChild(geom);
     }
-
 }
 
 void
@@ -429,57 +535,31 @@ AerodromeRenderer::apply(LinearFeatureGroup& group)
 void
 AerodromeRenderer::apply(PavementGroup& group)
 {
+    //osg::ref_ptr<Geometry> combGeom = combineGeometries<PavementGroup, PavementNode>(group);
+
+    //if (combGeom.valid())
+    //{
+    //    Style style;
+
+    //    style.getOrCreate<PolygonSymbol>()->fill()->color() = Color(0.6f,0.6f,0.6f,1.0f);
+    //    style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
+    //    style.getOrCreate<AltitudeSymbol>()->verticalOffset() = _elevation;
+
+    //    osg::ref_ptr<osgEarth::Features::Feature> feature = new osgEarth::Features::Feature(combGeom.get(), _map->getSRS(), style);
+    //    osg::Node* geom = randomFeatureRenderer(feature.get());
+    //    if (geom)
+    //    {
+    //        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
+    //        group.addChild(geom);
+    //    }
+    //}
+
     traverse(group);
 }
 
 void
 AerodromeRenderer::apply(RunwayGroup& group)
 {
-    osg::ref_ptr<Geometry> combGeom = 0L;
-    for (int c=0; c < group.getNumChildren(); c++)
-    {
-        RunwayNode* runway = dynamic_cast<RunwayNode*>(group.getChild(c));
-        if (runway)
-        {
-            osg::ref_ptr<osgEarth::Features::Feature> feature = runway->getFeature();
-            Polygon* featurePoly = dynamic_cast<Polygon*>(feature->getGeometry());
-            if (featurePoly)
-            {
-                if (!combGeom.valid())
-                {
-                    combGeom = new Polygon(*featurePoly);
-                }
-                else
-                {
-                    osg::ref_ptr<Geometry> copy = combGeom.get();
-                    combGeom = 0L;
-
-                    if (!featurePoly->geounion(copy, combGeom))
-                    {
-                        OE_WARN << LC << "GEOS union failed." << std::endl;
-                    }
-                }
-            }
-        }
-    }
-
-    if (combGeom.valid())
-    {
-        Style style;
-
-        style.getOrCreate<PolygonSymbol>()->fill()->color() = Color(0.4, 0.4, 0.4, 1.0);
-        style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
-        style.getOrCreate<AltitudeSymbol>()->verticalOffset() = _elevation;
-
-        osg::ref_ptr<osgEarth::Features::Feature> feature = new osgEarth::Features::Feature(combGeom.get(), _map->getSRS(), style);
-        osg::Node* geom = randomFeatureRenderer(feature.get(), 11.0);
-        if (geom)
-        {
-            geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 2.0, 1.0 ), osg::StateAttribute::ON );
-            group.addChild(geom);
-        }
-    }
-
     traverse(group);
 }
 
@@ -504,6 +584,25 @@ AerodromeRenderer::apply(StopwayGroup& group)
 void
 AerodromeRenderer::apply(TaxiwayGroup& group)
 {
+    //osg::ref_ptr<Geometry> combGeom = combineGeometries<TaxiwayGroup, TaxiwayNode>(group);
+
+    //if (combGeom.valid())
+    //{
+    //    Style style;
+
+    //    style.getOrCreate<PolygonSymbol>()->fill()->color() = Color(0.6f,0.6f,0.6f,1.0f);
+    //    style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
+    //    style.getOrCreate<AltitudeSymbol>()->verticalOffset() = _elevation;
+
+    //    osg::ref_ptr<osgEarth::Features::Feature> feature = new osgEarth::Features::Feature(combGeom.get(), _map->getSRS(), style);
+    //    osg::Node* geom = randomFeatureRenderer(feature.get());
+    //    if (geom)
+    //    {
+    //        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
+    //        group.addChild(geom);
+    //    }
+    //}
+
     traverse(group);
 }
 
@@ -572,6 +671,41 @@ AerodromeRenderer::apply(osg::Group& node)
         traverse(node);
 }
 
+template <typename T, typename Y>
+osgEarth::Symbology::Geometry* AerodromeRenderer::combineGeometries(T& group)
+{
+    osg::ref_ptr<Geometry> combGeom = 0L;
+    for (int c=0; c < group.getNumChildren(); c++)
+    {
+        Y* childNode = dynamic_cast<Y*>(group.getChild(c));
+        if (childNode)
+        {
+            osg::ref_ptr<osgEarth::Features::Feature> feature = childNode->getFeature();
+            Polygon* featurePoly = dynamic_cast<Polygon*>(feature->getGeometry());
+            if (featurePoly)
+            {
+                if (!combGeom.valid())
+                {
+                    combGeom = new Polygon(*featurePoly);
+                }
+                else
+                {
+                    osg::ref_ptr<Geometry> copy = combGeom.get();
+                    combGeom = 0L;
+
+                    if (!featurePoly->geounion(copy, combGeom))
+                    {
+                        
+                        OE_WARN << LC << "GEOS union failed. (" << childNode->icao() << ")" << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
+    return combGeom.release();
+}
+
 osg::Node*
 AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, float height)
 {
@@ -603,11 +737,12 @@ AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, c
         else if (feature->getGeometry()->getType() == osgEarth::Symbology::Geometry::TYPE_POINTSET)
         {
             style.getOrCreate<PointSymbol>()->fill()->color() = color;
-            style.getOrCreate<PointSymbol>()->size() = 3.0f;
+            style.getOrCreate<PointSymbol>()->size() = 2.0f;
         }
         else
         {
             style.getOrCreate<LineSymbol>()->stroke()->color() = color;
+            //style.getOrCreate<LineSymbol>()->stroke()->width() = 3.0f;
         }
 
         if (height > 0.0)
@@ -620,7 +755,7 @@ AerodromeRenderer::randomFeatureRenderer(osgEarth::Features::Feature* feature, c
 
         GeometryCompiler compiler;
         osg::ref_ptr< Feature > clone = new Feature(*feature, osg::CopyOp::DEEP_COPY_ALL);
-
+        //OE_WARN << LC << (clone->style().isSet() ? "STYLE SET" : "NO STYLE") << std::endl;
         return compiler.compile( clone, (clone->style().isSet() ? *clone->style() : style), context );
     }
 

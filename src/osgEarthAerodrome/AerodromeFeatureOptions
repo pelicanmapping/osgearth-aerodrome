@@ -29,6 +29,50 @@ namespace osgEarth { namespace Aerodrome
     using namespace osgEarth;
     using namespace osgEarth::Features;
 
+
+    class TextureOptions : public ConfigOptions
+    {
+    public:
+        /** ICAO code attribute name */
+        optional<URI>& url() { return _imageURI; }
+        const optional<URI>& url() const { return _imageURI; }    
+
+        optional<float>& length() { return _length; }
+        const optional<float>& length() const { return _length; }
+
+    public:
+        TextureOptions( const ConfigOptions& opt =ConfigOptions() ) :
+          ConfigOptions( opt )
+        {            
+            fromConfig( _conf );
+        }
+
+        virtual ~TextureOptions() { }
+
+    public:
+        Config getConfig() const {
+            Config conf = ConfigOptions::getConfig();
+            conf.updateIfSet( "url", _imageURI );
+            conf.updateIfSet( "length", _length );  
+            return conf;
+        }
+
+    protected:
+        void mergeConfig( const Config& conf ) {
+            ConfigOptions::mergeConfig( conf );
+            fromConfig( conf );
+        }
+
+    private:
+        void fromConfig( const Config& conf ) {
+            conf.getIfSet( "url", _imageURI );
+            conf.getIfSet<float>( "length", _length );
+        }
+     
+        optional<URI>    _imageURI;
+        optional<float> _length;
+    };
+
     /**
      * Options for the Aerodrome features
      */
@@ -42,11 +86,14 @@ namespace osgEarth { namespace Aerodrome
         optional<FeatureSourceOptions>& featureOptions() { return _featureOptions; }
         const optional<FeatureSourceOptions>& featureOptions() const { return _featureOptions; }
 
+        optional<TextureOptions>& textureOptions() { return _textureOptions; }
+        const optional<TextureOptions>& textureOptions() const { return _textureOptions; }
+
     public:
         AerodromeFeatureOptions( const ConfigOptions& opt =ConfigOptions() ) :
           ConfigOptions( opt ),
           _icaoAttr("apt_icao")
-          {            
+        {            
             fromConfig( _conf );
         }
 
@@ -56,7 +103,8 @@ namespace osgEarth { namespace Aerodrome
         Config getConfig() const {
             Config conf = ConfigOptions::getConfig();
             conf.updateIfSet( "icao_attr", _icaoAttr );
-            conf.updateObjIfSet( "features", _featureOptions );  
+            conf.updateObjIfSet( "features", _featureOptions );
+            conf.updateObjIfSet( "texture", _textureOptions );  
             return conf;
         }
 
@@ -70,10 +118,12 @@ namespace osgEarth { namespace Aerodrome
         void fromConfig( const Config& conf ) {
             conf.getIfSet( "icao_attr", _icaoAttr );
             conf.getObjIfSet( "features", _featureOptions );
+            conf.getObjIfSet( "texture", _textureOptions );
         }
      
         optional<std::string> _icaoAttr;
         optional<FeatureSourceOptions> _featureOptions;
+        optional<TextureOptions> _textureOptions;
     };
 
 } } // namespace osgEarth::Aerodrome

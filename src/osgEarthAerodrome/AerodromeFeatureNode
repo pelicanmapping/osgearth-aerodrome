@@ -22,6 +22,7 @@
 #include <osg/Group>
 
 #include "Common"
+#include "AerodromeFeatureOptions"
 #include <osgEarthFeatures/Feature>
 
 namespace osgEarth { namespace Aerodrome
@@ -35,7 +36,7 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT AerodromeFeatureNode : public osg::Group
     {
     public:
-        AerodromeFeatureNode(const std::string& icao, Feature* feature=0L) : _icao(icao), _feature(feature) { }
+        AerodromeFeatureNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature=0L) : _options(options), _icao(icao), _feature(feature) { }
 
         virtual ~AerodromeFeatureNode() { }
 
@@ -44,6 +45,9 @@ namespace osgEarth { namespace Aerodrome
         /** ICAO code */
         const std::string& icao() { return _icao; }
 
+        /** Options */
+        const AerodromeFeatureOptions& getOptions() const { return _options; }
+
         /** The underlying feature. */
         Feature* getFeature() { return _feature.get(); }
 
@@ -51,6 +55,7 @@ namespace osgEarth { namespace Aerodrome
 
         std::string _icao;
         osg::ref_ptr<Feature> _feature;
+        AerodromeFeatureOptions _options;
     };
 
 } } // namespace osgEarth::Aerodrome
