@@ -81,7 +81,7 @@ namespace osgEarth { namespace Aerodrome
 
     protected:
 
-        void createLocalizations(const GeoPoint& anchor);
+        void createLocalizations(const osgEarth::Bounds& bounds);
 
         void transformAndLocalize(const std::vector<osg::Vec3d>& input,
                                   const SpatialReference*        inputSRS,
@@ -90,14 +90,22 @@ namespace osgEarth { namespace Aerodrome
 
         template <typename T, typename Y> osgEarth::Symbology::Geometry* combineGeometries(T& group);
 
-        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, float height=-1.0f);
-        osg::Node* randomFeatureRenderer(osgEarth::Features::Feature* feature, const Color& color, float height=-1.0f);
+        
+
+        osg::Node* featureModelRenderer(osgEarth::Features::Feature* feature, const std::string& url, float scale=1.0f);
+
+        osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, float height=-1.0f);
+        osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Color& color, float height=-1.0f);
+        osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Style& style);
+        
+
 
         osg::ref_ptr<Map> _map;
         osg::ref_ptr<const osgDB::Options> _dbOptions;
         double _elevation;
         osg::Matrixd _world2local;
         osg::Matrixd _local2world;
+        osg::Vec3d _localMin;
     };
 
 } } // namespace osgEarth::Aerodrome
