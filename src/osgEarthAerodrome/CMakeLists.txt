@@ -16,6 +16,7 @@ set(LIB_PUBLIC_HEADERS
     AerodromeFeatureOptions
     AerodromeNode
     AerodromeRenderer
+    BoundaryNode
     Common
     Export
     LightBeaconNode

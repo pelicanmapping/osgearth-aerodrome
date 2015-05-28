@@ -314,92 +314,21 @@ AerodromeRenderer::apply(PavementNode& node)
 
     osg::ref_ptr<osg::Node> geom;
 
-    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
-    if (geomPoints.valid() && geomPoints->size() > 2)
+    if (node.getOptions().textureOptions().isSet() && node.getOptions().textureOptions()->url().isSet())
     {
-        std::vector<osg::Vec3d> featurePoints;
-        for (int i=0; i < geomPoints->size(); i++)
-        {
-            featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
-        }
-     
-        //osg::Vec3Array* normals = new osg::Vec3Array();
-        osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
-
-        osg::Geometry* geometry = new osg::Geometry();
-        geometry->setVertexArray( verts );
-
-        osg::Vec4Array* colors = new osg::Vec4Array;
-
-        if (node.getOptions().textureOptions().isSet() && node.getOptions().textureOptions()->url().isSet())
-        {
-            osg::Image* tex = node.getOptions().textureOptions()->url()->getImage(_dbOptions);
-            if (tex)
-            {
-                osg::Texture2D* _texture = new osg::Texture2D(tex);     
-                _texture->setWrap(_texture->WRAP_S, _texture->REPEAT);
-                _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
-                _texture->setResizeNonPowerOfTwoHint(false);
-                geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
-
-                osg::Vec2Array* tcoords = new osg::Vec2Array(verts->size());
-
-                float texLength = node.getOptions().textureOptions()->length().isSet() ? node.getOptions().textureOptions()->length().value() : 10.0f;
-
-                for (int i=0; i < verts->size(); i++)
-                {
-                    float tcX = ((*verts)[i].x() - _localMin.x()) / texLength;
-                    float tcY = ((*verts)[i].y() - _localMin.y()) / texLength;
-
-                    (*tcoords)[i].set(tcX, tcY);
-                }
-            
-                geometry->setTexCoordArray(0,tcoords);
-            }
-            else
-            {
-                OE_WARN << LC << "Error reading texture file: " << node.getOptions().textureOptions()->url()->full() << std::endl;
-            }
-
-            colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-        }
-        else
-        {
-            colors->push_back(osg::Vec4(0.4f,0.4f,0.4f,1.0f));
-        }
-
-        geometry->setColorArray(colors);
-        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-        geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
-
-        geometry->setName(node.icao() + "_AERODROME_PAVEMENT");
-
-        osgEarth::Tessellator tess;
-        tess.tessellateGeometry(*geometry);
-
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-        geode->addDrawable(geometry);
-
-        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
-
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
-
-        osg::MatrixTransform* mt = new osg::MatrixTransform();
-        mt->setMatrix(_local2world);
-        mt->addChild(geode);
-
-        geom = mt;
+        geom = featureSingleTextureRenderer(feature.get(), node.getOptions().textureOptions()->url().value(), node.getOptions().textureOptions()->length().isSet() ? node.getOptions().textureOptions()->length().value() : 10.0);
     }
     else
     {
-        geom = defaultFeatureRenderer(feature.get(), Color(0.4, 0.4, 0.4, 1.0));
+        geom = defaultFeatureRenderer(feature.get(), Color(0.6, 0.6, 0.6, 1.0));
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
     }
 
     if (geom.valid())
+    {
+        geom->setName(node.icao() + "_AERODROME_PAVEMENT");
         node.addChild(geom);
+    }
 }
 
 void
@@ -432,9 +361,11 @@ AerodromeRenderer::apply(RunwayNode& node)
             osg::Image* tex = node.getOptions().textureOptions()->url()->getImage(_dbOptions);
             if (tex)
             {
-                osg::Texture2D* _texture = new osg::Texture2D(tex);     
+                osg::Texture2D* _texture = new osg::Texture2D(tex);
                 _texture->setWrap(_texture->WRAP_S, _texture->CLAMP_TO_EDGE);
                 _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
+                _texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::NEAREST); 
+                _texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::NEAREST);
                 _texture->setResizeNonPowerOfTwoHint(false);
                 geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
 
@@ -553,10 +484,22 @@ void
 AerodromeRenderer::apply(TaxiwayNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color(0.6f,0.6f,0.6f,1.0f));
-    if (geom)
+
+    osg::ref_ptr<osg::Node> geom;
+
+    if (node.getOptions().textureOptions().isSet() && node.getOptions().textureOptions()->url().isSet())
     {
+        geom = featureSingleTextureRenderer(feature.get(), node.getOptions().textureOptions()->url().value(), node.getOptions().textureOptions()->length().isSet() ? node.getOptions().textureOptions()->length().value() : 10.0);
+    }
+    else
+    {
+        geom = defaultFeatureRenderer(feature.get(), Color(0.6, 0.6, 0.6, 1.0));
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
+    }
+
+    if (geom.valid())
+    {
+        geom->setName(node.icao() + "_AERODROME_TAXIWAY");
         node.addChild(geom);
     }
 }
@@ -739,6 +682,81 @@ osgEarth::Symbology::Geometry* AerodromeRenderer::combineGeometries(T& group)
     }
 
     return combGeom.release();
+}
+
+osg::Node*
+AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* feature, const osgEarth::URI& uri, float length)
+{
+    osg::ref_ptr<osg::Node> geom;
+    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
+    if (geomPoints.valid() && geomPoints->size() > 2)
+    {
+        std::vector<osg::Vec3d> featurePoints;
+        for (int i=0; i < geomPoints->size(); i++)
+        {
+            featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+        }
+
+        //osg::Vec3Array* normals = new osg::Vec3Array();
+        osg::Vec3Array* verts = new osg::Vec3Array();
+        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+
+        osg::Geometry* geometry = new osg::Geometry();
+        geometry->setVertexArray( verts );
+
+        osg::Vec4Array* colors = new osg::Vec4Array;
+
+        osg::Image* tex = uri.getImage(_dbOptions);
+        if (tex)
+        {
+            osg::Texture2D* _texture = new osg::Texture2D(tex);     
+            _texture->setWrap(_texture->WRAP_S, _texture->REPEAT);
+            _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
+            _texture->setResizeNonPowerOfTwoHint(false);
+            geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
+
+            osg::Vec2Array* tcoords = new osg::Vec2Array(verts->size());
+
+            for (int i=0; i < verts->size(); i++)
+            {
+                float tcX = ((*verts)[i].x() - _localMin.x()) / length;
+                float tcY = ((*verts)[i].y() - _localMin.y()) / length;
+
+                (*tcoords)[i].set(tcX, tcY);
+            }
+            
+            geometry->setTexCoordArray(0,tcoords);
+        }
+        else
+        {
+            OE_WARN << LC << "Error reading texture file: " << uri.full() << std::endl;
+        }
+
+        colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
+
+        geometry->setColorArray(colors);
+        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+        geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
+
+        osgEarth::Tessellator tess;
+        tess.tessellateGeometry(*geometry);
+
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        geode->addDrawable(geometry);
+
+        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+
+        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
+
+        osg::MatrixTransform* mt = new osg::MatrixTransform();
+        mt->setMatrix(_local2world);
+        mt->addChild(geode);
+
+        geom = mt;
+    }
+
+    return geom.release();
 }
 
 osg::Node*

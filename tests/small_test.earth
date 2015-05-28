@@ -1,0 +1,37 @@
+<!--
+osgEarth Sample - ReadyMap.ORG Server - http://readymap.org
+
+ReadyMap.ORG provides free global base map data for osgEarth developers!
+This tiled, worldwide dataset of imagery, elevation, and street map data
+is a great base map that provides global context for your own local datasets.
+It works "out of the box" with osgEarth applications.
+
+**** NOTICE ****
+YOU ARE RESPONSIBLE for abiding by the TERMS AND CONDITIONS outlined at:
+http://readymap.org
+
+-->
+<map name="readymap.org" type="geocentric">
+    
+    <options>
+        <terrain first_lod="1" normalize_edges="true"/>
+    </options>
+    
+    <image name="readymap_imagery" driver="tms">
+        <url>http://readymap.org/readymap/tiles/1.0.0/7/</url>
+    </image>
+        
+    <elevation name="readymap_elevation" driver="tms">
+        <url>http://readymap.org/readymap/tiles/1.0.0/116/</url>
+    </elevation>
+
+    <extensions>
+	<viewpoints>
+	    <viewpoint name="KMKE" heading="12.4" lat="42.9472" long="-87.8967" height="0.0" pitch="-80" range="15000" />
+	    <viewpoint name="KBFI" heading="12.4" lat="47.5300" long="-122.3019" height="0.0" pitch="-80" range="15000" />
+            <viewpoint name="KHEF" heading="12.4" lat="38.7214" long="-77.5156" height="0.0" pitch="-80.0" range="10000" />
+	    <viewpoint name="KGSO" heading="12.4" lat="36.0978" long="-79.9372" height="0.0" pitch="-80" range="15000" />
+	    <viewpoint name="KMMU" heading="12.4" lat="40.7994" long="-74.4150" height="0.0" pitch="-80" range="15000" />
+	</viewpoints>
+    </extensions>
+</map>

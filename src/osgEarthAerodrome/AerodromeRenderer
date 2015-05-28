@@ -91,7 +91,7 @@ namespace osgEarth { namespace Aerodrome
         template <typename T, typename Y> osgEarth::Symbology::Geometry* combineGeometries(T& group);
 
         
-
+        osg::Node* featureSingleTextureRenderer(osgEarth::Features::Feature* feature, const osgEarth::URI& uri, float length);
         osg::Node* featureModelRenderer(osgEarth::Features::Feature* feature, const std::string& url, float scale=1.0f);
 
         osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, float height=-1.0f);

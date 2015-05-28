@@ -1,0 +1,102 @@
+<catalog name="Aerodrome Test" version="1">
+
+	<description>Aerodrome test catalog</description>
+
+        <boundaries>
+                <features name="xplane_airport_boundaries" driver="ogr">
+                        <url>./z_APTBoundary.shp</url>
+                </features>
+        </boundaries>
+
+        <light_beacons>
+                <features name="xplane_light_beacons" driver="ogr">
+                        <url>./z_APTLightBeacon.shp</url>
+                </features>
+
+                <model scale="5.0">
+                        <url>../../data/models/light_beacon/antenas.flt</url>
+                </model>
+        </light_beacons>
+
+        <light_indicators>
+                <features name="xplane_light_indicators" driver="ogr">
+                        <url>./z_VASI_PAPI_WIGWAG.shp</url>
+                </features>
+
+                <model scale="2.0">
+                        <url>../../data/models/indicator_lights/airport_light.flt</url>
+                </model>
+        </light_indicators>
+
+        <linear_features>
+                <features name="xplane_linearfeatures" driver="ogr">
+                        <url>./z_APTLinearFeature.shp</url>
+                </features>
+        </linear_features>
+
+        <pavement>
+                <features name="xplane_pavement" driver="ogr">
+                        <url>./z_Pavement.shp</url>
+                </features>
+
+                <texture length="15">
+                        <url>../../data/textures/pavement.jpg</url>
+                </texture>
+        </pavement>
+
+        <runways>
+                <features name="xplane_runways" driver="ogr">
+                        <url>./z_RunwayPolygon.shp</url>
+                </features>
+
+                <texture>
+                        <url>../../data/textures/runway.jpg</url>
+                </texture>
+        </runways>
+
+        <runway_thresholds>
+                <features name="xplane_runway_thresholds" driver="ogr">
+                        <url>./z_RunwayThreshold.shp</url>
+                </features>
+        </runway_thresholds>
+
+        <startup_locations>
+                <features name="xplane_startup_locations" driver="ogr">
+                        <url>./z_StartupLocation.shp</url>
+                </features>
+        </startup_locations>
+
+        <stopways>
+                <features name="xplane_stopways" driver="ogr">
+                        <url>./z_Stopway.shp</url>
+                </features>
+        </stopways>
+
+        <taxiways>
+                <features name="xplane_taxiways" driver="ogr">
+                        <url>./z_TaxiwayRectangle.shp</url>
+                </features>
+
+                <texture length="15">
+                        <url>../../data/textures/pavement.jpg</url>
+                </texture>
+        </taxiways>
+
+        <!-- the icao_attr property can be used to override the default value "apt_icao" -->
+        <terminals icao_attr="icao">
+                <features name="osm_terminals" driver="ogr">
+                        <url>./z_aeroway_terminal.shp</url>
+                </features>
+        </terminals>
+
+        <windsocks>
+                <features name="xplane_windsocks" driver="ogr">
+                        <url>./z_APTWindsock.shp</url>
+                </features>
+
+                <model scale="2.0">
+                        <url>../../data/models/windsock/air_speed.flt</url>
+                </model>
+        </windsocks>
+
+</catalog>
