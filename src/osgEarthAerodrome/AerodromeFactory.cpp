@@ -198,17 +198,11 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
     if (catalog->boundaryOptions().isSet())
         createBoundaryNodes(catalog->boundaryOptions().value(), context, options);
 
-    if (catalog->lightBeaconOptions().isSet())
-        createFeatureNodes<LightBeaconNode, LightBeaconGroup>(catalog->lightBeaconOptions().value(), context, options);
-
-    if (catalog->lightIndicatorOptions().isSet())
-        createFeatureNodes<LightIndicatorNode, LightIndicatorGroup>(catalog->lightIndicatorOptions().value(), context, options);
-
-    if (catalog->linearFeatureOptions().isSet())
-        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup>(catalog->linearFeatureOptions().value(), context, options);
-
     if (catalog->pavementOptions().isSet())
         createFeatureNodes<PavementNode, PavementGroup>(catalog->pavementOptions().value(), context, options);
+
+    if (catalog->taxiwayOptions().isSet())
+        createFeatureNodes<TaxiwayNode, TaxiwayGroup>(catalog->taxiwayOptions().value(), context, options);
 
     if (catalog->runwayOptions().isSet())
         createFeatureNodes<RunwayNode, RunwayGroup>(catalog->runwayOptions().value(), context, options);
@@ -216,20 +210,26 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
     if (catalog->runwayThresholdOptions().isSet())
         createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup>(catalog->runwayThresholdOptions().value(), context, options);
 
-    if (catalog->startupLocationOptions().isSet())
-        createFeatureNodes<StartupLocationNode, StartupLocationGroup>(catalog->startupLocationOptions().value(), context, options);
-
     if (catalog->stopwayOptions().isSet())
         createFeatureNodes<StopwayNode, StopwayGroup>(catalog->stopwayOptions().value(), context, options);
 
-    if (catalog->taxiwayOptions().isSet())
-        createFeatureNodes<TaxiwayNode, TaxiwayGroup>(catalog->taxiwayOptions().value(), context, options);
+    if (catalog->linearFeatureOptions().isSet())
+        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup>(catalog->linearFeatureOptions().value(), context, options);
 
-    if (catalog->terminalOptions().isSet())
-        createFeatureNodes<TerminalNode, TerminalGroup>(catalog->terminalOptions().value(), context, options);
+    if (catalog->startupLocationOptions().isSet())
+        createFeatureNodes<StartupLocationNode, StartupLocationGroup>(catalog->startupLocationOptions().value(), context, options);
+
+    if (catalog->lightBeaconOptions().isSet())
+        createFeatureNodes<LightBeaconNode, LightBeaconGroup>(catalog->lightBeaconOptions().value(), context, options);
+
+    if (catalog->lightIndicatorOptions().isSet())
+        createFeatureNodes<LightIndicatorNode, LightIndicatorGroup>(catalog->lightIndicatorOptions().value(), context, options);
 
     if (catalog->windsockOptions().isSet())
         createFeatureNodes<WindsockNode, WindsockGroup>(catalog->windsockOptions().value(), context, options);
+
+    if (catalog->terminalOptions().isSet())
+        createFeatureNodes<TerminalNode, TerminalGroup>(catalog->terminalOptions().value(), context, options);
 
     OE_NOTICE << LC << "Created " << context.aerodromes.size() << " aerodromes." << std::endl;
 

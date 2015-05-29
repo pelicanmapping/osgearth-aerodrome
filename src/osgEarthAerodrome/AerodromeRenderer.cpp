@@ -36,7 +36,7 @@
 #include <osg/Geode>
 #include <osg/Geometry>
 #include <osg/MatrixTransform>
-#include <osg/PolygonOffset>
+#include <osg/Depth>
 #include <osgEarth/ECEF>
 #include <osgEarth/ElevationQuery>
 #include <osgEarth/Registry>
@@ -189,12 +189,12 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 5.0, 1.0 ), osg::StateAttribute::ON );
+        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
         mt->addChild(geode);
-        node.addChild(mt);
+        node.insertChild(0, mt);
         
         // create mask layer based on boundary
         osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
@@ -246,12 +246,12 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 5.0, 1.0 ), osg::StateAttribute::ON );
+        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
         mt->addChild(geode);
-        node.addChild(mt);
+        node.insertChild(0, mt);
 
         // create mask layer based on accumulated bounds
         osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _elevation, _map.get()));
@@ -321,7 +321,7 @@ AerodromeRenderer::apply(PavementNode& node)
     else
     {
         geom = defaultFeatureRenderer(feature.get(), Color(0.6, 0.6, 0.6, 1.0));
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
     }
 
     if (geom.valid())
@@ -427,7 +427,7 @@ AerodromeRenderer::apply(RunwayNode& node)
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 2.0, 1.0 ), osg::StateAttribute::ON );
+        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
@@ -438,7 +438,7 @@ AerodromeRenderer::apply(RunwayNode& node)
     else
     {
         geom = defaultFeatureRenderer(feature.get(), Color(0.4, 0.4, 0.4, 1.0));
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 2.0, 1.0 ), osg::StateAttribute::ON );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
     }
 
     if (geom.valid())
@@ -454,7 +454,7 @@ AerodromeRenderer::apply(RunwayThresholdNode& node)
     osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
     if (geom)
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 1.0, 1.0 ), osg::StateAttribute::ON );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
         node.addChild(geom);
     }
 }
@@ -475,7 +475,7 @@ AerodromeRenderer::apply(StopwayNode& node)
     osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
     if (geom)
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 1.0, 1.0 ), osg::StateAttribute::ON );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
         node.addChild(geom);
     }
 }
@@ -494,7 +494,7 @@ AerodromeRenderer::apply(TaxiwayNode& node)
     else
     {
         geom = defaultFeatureRenderer(feature.get(), Color(0.6, 0.6, 0.6, 1.0));
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
     }
 
     if (geom.valid())
@@ -747,7 +747,7 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::PolygonOffset( 3.0, 1.0 ), osg::StateAttribute::ON );
+        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
@@ -854,7 +854,12 @@ AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds)
     _world2local.invert(_local2world);
 
     // find the local min point (lower-left), used for calculating site-wide texture coords
-    ECEF::transformAndLocalize(osg::Vec3d(bounds.xMin(), bounds.yMin(), _elevation), _map->getSRS(), _localMin, _map->getSRS(), _world2local);
+    GeoPoint vert(_map->getSRS(), osg::Vec3d(bounds.xMin(), bounds.yMin(), _elevation), osgEarth::ALTMODE_ABSOLUTE);
+
+    osg::Vec3d world;
+    vert.toWorld(world);
+    _localMin = world * _world2local;
+    _localMin.z() = 0.0;
 }
 
 void
@@ -868,5 +873,14 @@ AerodromeRenderer::transformAndLocalize(const std::vector<osg::Vec3d>& input,
     if ( output_normals )
         output_normals->reserve( output_verts->size() );
 
-    ECEF::transformAndLocalize(input, inputSRS, output_verts, output_normals, _map->getSRS(), _world2local);
+    for (int i=0; i < input.size(); i++)
+    {
+        GeoPoint vert(inputSRS, input[i], osgEarth::ALTMODE_ABSOLUTE);
+
+        osg::Vec3d world;
+        vert.toWorld(world);
+        osg::Vec3d local = world * _world2local;
+        local.z() = 0.0;
+        output_verts->push_back(local);
+    }
 }
