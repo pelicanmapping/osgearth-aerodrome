@@ -40,42 +40,53 @@ AerodromeCatalog::fromConfig(const Config& conf)
 {
     conf.getIfSet("version", _version);
 
-    if ( conf.hasChild("boundaries") )
-        _boundaryOptions->merge( conf.child("boundaries") );
+    ConfigSet boundaries = conf.children("boundaries");
+    for (ConfigSet::const_iterator i = boundaries.begin(); i != boundaries.end(); i++)
+        _boundaryOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("light_beacons") )
-        _lightBeaconOptions->merge( conf.child("light_beacons") );
+    ConfigSet lightBeacons = conf.children("light_beacons");
+    for (ConfigSet::const_iterator i = lightBeacons.begin(); i != lightBeacons.end(); i++)
+        _lightBeaconOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("light_indicators") )
-        _lightIndicatorOptions->merge( conf.child("light_indicators") );
+    ConfigSet lightIndicators = conf.children("light_indicators");
+    for (ConfigSet::const_iterator i = lightIndicators.begin(); i != lightIndicators.end(); i++)
+        _lightIndicatorOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("linear_features") )
-        _linearFeatureOptions->merge( conf.child("linear_features") );
+    ConfigSet linearFeatures = conf.children("linear_features");
+    for (ConfigSet::const_iterator i = linearFeatures.begin(); i != linearFeatures.end(); i++)
+        _linearFeatureOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("pavement") )
-        _pavementOptions->merge( conf.child("pavement") );
+    ConfigSet pavements = conf.children("pavement");
+    for (ConfigSet::const_iterator i = pavements.begin(); i != pavements.end(); i++)
+        _pavementOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("runways") )
-        _runwayOptions->merge( conf.child("runways") );
+    ConfigSet runways = conf.children("runways");
+    for (ConfigSet::const_iterator i = runways.begin(); i != runways.end(); i++)
+        _runwayOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("runway_thresholds") )
-        _runwayThresholdOptions->merge( conf.child("runway_thresholds") );
+    ConfigSet runwayThresholds = conf.children("runway_thresholds");
+    for (ConfigSet::const_iterator i = runwayThresholds.begin(); i != runwayThresholds.end(); i++)
+        _runwayThresholdOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("startup_locations") )
-        _startupLocationOptions->merge( conf.child("startup_locations") );
+    ConfigSet startupLocations = conf.children("startup_locations");
+    for (ConfigSet::const_iterator i = startupLocations.begin(); i != startupLocations.end(); i++)
+        _startupLocationOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("stopways") )
-        _stopwayOptions->merge( conf.child("stopways") );
+    ConfigSet stopways = conf.children("stopways");
+    for (ConfigSet::const_iterator i = stopways.begin(); i != stopways.end(); i++)
+        _stopwayOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("taxiways") )
-        _taxiwayOptions->merge( conf.child("taxiways") );
+    ConfigSet taxiways = conf.children("taxiways");
+    for (ConfigSet::const_iterator i = taxiways.begin(); i != taxiways.end(); i++)
+        _taxiwayOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("terminals") )
-        _terminalOptions->merge( conf.child("terminals") );
+    ConfigSet terminals = conf.children("terminals");
+    for (ConfigSet::const_iterator i = terminals.begin(); i != terminals.end(); i++)
+        _terminalOptions.push_back(AerodromeFeatureOptions(*i));
 
-    if ( conf.hasChild("windsocks") )
-        _windsockOptions->merge( conf.child("windsocks") );
-
+    ConfigSet windsocks = conf.children("windsocks");
+    for (ConfigSet::const_iterator i = windsocks.begin(); i != windsocks.end(); i++)
+        _windsockOptions.push_back(AerodromeFeatureOptions(*i));
 }
 
 Config
@@ -83,18 +94,42 @@ AerodromeCatalog::getConfig() const
 {
     Config conf;
     conf.addIfSet("version", _version);
-    conf.updateObjIfSet( "boundaries", _boundaryOptions );
-    conf.updateObjIfSet( "light_beacons", _lightBeaconOptions );
-    conf.updateObjIfSet( "light_indicators", _lightIndicatorOptions );
-    conf.updateObjIfSet( "linear_features", _linearFeatureOptions );
-    conf.updateObjIfSet( "pavement", _pavementOptions );
-    conf.updateObjIfSet( "runways", _runwayOptions );
-    conf.updateObjIfSet( "runway_thresholds", _runwayThresholdOptions );
-    conf.updateObjIfSet( "startup_locations", _startupLocationOptions );
-    conf.updateObjIfSet( "stopways", _stopwayOptions );
-    conf.updateObjIfSet( "taxiways", _taxiwayOptions );
-    conf.updateObjIfSet( "terminals", _terminalOptions );
-    conf.updateObjIfSet( "windsocks", _windsockOptions );
+
+    for(AerodromeOptionsSet::const_iterator i = _boundaryOptions.begin(); i != _boundaryOptions.end(); ++i)
+        conf.add("boundaries", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _lightBeaconOptions.begin(); i != _lightBeaconOptions.end(); ++i)
+        conf.add("light_beacons", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _lightIndicatorOptions.begin(); i != _lightIndicatorOptions.end(); ++i)
+        conf.add("light_indicators", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _linearFeatureOptions.begin(); i != _linearFeatureOptions.end(); ++i)
+        conf.add("linear_features", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _pavementOptions.begin(); i != _pavementOptions.end(); ++i)
+        conf.add("pavement", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _runwayOptions.begin(); i != _runwayOptions.end(); ++i)
+        conf.add("runways", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _runwayThresholdOptions.begin(); i != _runwayThresholdOptions.end(); ++i)
+        conf.add("runway_thresholds", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _startupLocationOptions.begin(); i != _startupLocationOptions.end(); ++i)
+        conf.add("startup_locations", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _stopwayOptions.begin(); i != _stopwayOptions.end(); ++i)
+        conf.add("stopways", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _taxiwayOptions.begin(); i != _taxiwayOptions.end(); ++i)
+        conf.add("taxiways", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _terminalOptions.begin(); i != _terminalOptions.end(); ++i)
+        conf.add("terminals", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _windsockOptions.begin(); i != _windsockOptions.end(); ++i)
+        conf.add("windsocks", i->getConfig());
 
     return conf;
 }

@@ -47,41 +47,41 @@ namespace osgEarth { namespace Aerodrome
 
     public: // properties
 
-        optional<AerodromeFeatureOptions>& boundaryOptions() { return _boundaryOptions; }
-        const optional<AerodromeFeatureOptions>& boundaryOptions() const { return _boundaryOptions; }
+        AerodromeOptionsSet& boundaryOptions() { return _boundaryOptions; }
+        const AerodromeOptionsSet& boundaryOptions() const { return _boundaryOptions; }
 
-        optional<AerodromeFeatureOptions>& lightBeaconOptions() { return _lightBeaconOptions; }
-        const optional<AerodromeFeatureOptions>& lightBeaconOptions() const { return _lightBeaconOptions; }
+        AerodromeOptionsSet& lightBeaconOptions() { return _lightBeaconOptions; }
+        const AerodromeOptionsSet& lightBeaconOptions() const { return _lightBeaconOptions; }
 
-        optional<AerodromeFeatureOptions>& lightIndicatorOptions() { return _lightIndicatorOptions; }
-        const optional<AerodromeFeatureOptions>& lightIndicatorOptions() const { return _lightIndicatorOptions; }
+        AerodromeOptionsSet& lightIndicatorOptions() { return _lightIndicatorOptions; }
+        const AerodromeOptionsSet& lightIndicatorOptions() const { return _lightIndicatorOptions; }
 
-        optional<AerodromeFeatureOptions>& linearFeatureOptions() { return _linearFeatureOptions; }
-        const optional<AerodromeFeatureOptions>& linearFeatureOptions() const { return _linearFeatureOptions; }
+        AerodromeOptionsSet& linearFeatureOptions() { return _linearFeatureOptions; }
+        const AerodromeOptionsSet& linearFeatureOptions() const { return _linearFeatureOptions; }
 
-        optional<AerodromeFeatureOptions>& pavementOptions() { return _pavementOptions; }
-        const optional<AerodromeFeatureOptions>& pavementOptions() const { return _pavementOptions; }
+        AerodromeOptionsSet& pavementOptions() { return _pavementOptions; }
+        const AerodromeOptionsSet& pavementOptions() const { return _pavementOptions; }
 
-        optional<AerodromeFeatureOptions>& runwayOptions() { return _runwayOptions; }
-        const optional<AerodromeFeatureOptions>& runwayOptions() const { return _runwayOptions; }
+        AerodromeOptionsSet& runwayOptions() { return _runwayOptions; }
+        const AerodromeOptionsSet& runwayOptions() const { return _runwayOptions; }
 
-        optional<AerodromeFeatureOptions>& runwayThresholdOptions() { return _runwayThresholdOptions; }
-        const optional<AerodromeFeatureOptions>& runwayThresholdOptions() const { return _runwayThresholdOptions; }
+        AerodromeOptionsSet& runwayThresholdOptions() { return _runwayThresholdOptions; }
+        const AerodromeOptionsSet& runwayThresholdOptions() const { return _runwayThresholdOptions; }
 
-        optional<AerodromeFeatureOptions>& startupLocationOptions() { return _startupLocationOptions; }
-        const optional<AerodromeFeatureOptions>& startupLocationOptions() const { return _startupLocationOptions; }
+        AerodromeOptionsSet& startupLocationOptions() { return _startupLocationOptions; }
+        const AerodromeOptionsSet& startupLocationOptions() const { return _startupLocationOptions; }
 
-        optional<AerodromeFeatureOptions>& stopwayOptions() { return _stopwayOptions; }
-        const optional<AerodromeFeatureOptions>& stopwayOptions() const { return _stopwayOptions; }
+        AerodromeOptionsSet& stopwayOptions() { return _stopwayOptions; }
+        const AerodromeOptionsSet& stopwayOptions() const { return _stopwayOptions; }
 
-        optional<AerodromeFeatureOptions>& taxiwayOptions() { return _taxiwayOptions; }
-        const optional<AerodromeFeatureOptions>& taxiwayOptions() const { return _taxiwayOptions; }
+        AerodromeOptionsSet& taxiwayOptions() { return _taxiwayOptions; }
+        const AerodromeOptionsSet& taxiwayOptions() const { return _taxiwayOptions; }
 
-        optional<AerodromeFeatureOptions>& terminalOptions() { return _terminalOptions; }
-        const optional<AerodromeFeatureOptions>& terminalOptions() const { return _terminalOptions; }
+        AerodromeOptionsSet& terminalOptions() { return _terminalOptions; }
+        const AerodromeOptionsSet& terminalOptions() const { return _terminalOptions; }
 
-        optional<AerodromeFeatureOptions>& windsockOptions() { return _windsockOptions; }
-        const optional<AerodromeFeatureOptions>& windsockOptions() const { return _windsockOptions; }
+        AerodromeOptionsSet& windsockOptions() { return _windsockOptions; }
+        const AerodromeOptionsSet& windsockOptions() const { return _windsockOptions; }
 
     public: // serialization
 
@@ -99,18 +99,18 @@ namespace osgEarth { namespace Aerodrome
     protected:
 
         optional<int> _version;
-        optional<AerodromeFeatureOptions> _boundaryOptions;
-        optional<AerodromeFeatureOptions> _lightBeaconOptions;
-        optional<AerodromeFeatureOptions> _lightIndicatorOptions;
-        optional<AerodromeFeatureOptions> _linearFeatureOptions;
-        optional<AerodromeFeatureOptions> _pavementOptions;
-        optional<AerodromeFeatureOptions> _runwayOptions;
-        optional<AerodromeFeatureOptions> _runwayThresholdOptions;
-        optional<AerodromeFeatureOptions> _startupLocationOptions;
-        optional<AerodromeFeatureOptions> _stopwayOptions;
-        optional<AerodromeFeatureOptions> _taxiwayOptions;
-        optional<AerodromeFeatureOptions> _terminalOptions;
-        optional<AerodromeFeatureOptions> _windsockOptions;
+        AerodromeOptionsSet _boundaryOptions;
+        AerodromeOptionsSet _lightBeaconOptions;
+        AerodromeOptionsSet _lightIndicatorOptions;
+        AerodromeOptionsSet _linearFeatureOptions;
+        AerodromeOptionsSet _pavementOptions;
+        AerodromeOptionsSet _runwayOptions;
+        AerodromeOptionsSet _runwayThresholdOptions;
+        AerodromeOptionsSet _startupLocationOptions;
+        AerodromeOptionsSet _stopwayOptions;
+        AerodromeOptionsSet _taxiwayOptions;
+        AerodromeOptionsSet _terminalOptions;
+        AerodromeOptionsSet _windsockOptions;
     };
 
 } } // namespace osgEarth::Aerodrome

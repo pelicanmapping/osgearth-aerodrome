@@ -129,6 +129,7 @@ void AerodromeFactory::createBoundaryNodes(AerodromeFeatureOptions featureOpts, 
     if (!featureOpts.featureOptions().isSet())
     {
         OE_WARN << LC << "Cannot create feature: feature source is not set." << std::endl;
+        return;
     }
 
     osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
@@ -195,41 +196,41 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
 
     AerodromeContext context;
 
-    if (catalog->boundaryOptions().isSet())
-        createBoundaryNodes(catalog->boundaryOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->boundaryOptions().begin(); i != catalog->boundaryOptions().end(); ++i)
+        createBoundaryNodes(*i, context, options);
 
-    if (catalog->pavementOptions().isSet())
-        createFeatureNodes<PavementNode, PavementGroup>(catalog->pavementOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->pavementOptions().begin(); i != catalog->pavementOptions().end(); ++i)
+        createFeatureNodes<PavementNode, PavementGroup>(*i, context, options);
 
-    if (catalog->taxiwayOptions().isSet())
-        createFeatureNodes<TaxiwayNode, TaxiwayGroup>(catalog->taxiwayOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->taxiwayOptions().begin(); i != catalog->taxiwayOptions().end(); ++i)
+        createFeatureNodes<TaxiwayNode, TaxiwayGroup>(*i, context, options);
 
-    if (catalog->runwayOptions().isSet())
-        createFeatureNodes<RunwayNode, RunwayGroup>(catalog->runwayOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->runwayOptions().begin(); i != catalog->runwayOptions().end(); ++i)
+        createFeatureNodes<RunwayNode, RunwayGroup>(*i, context, options);
 
-    if (catalog->runwayThresholdOptions().isSet())
-        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup>(catalog->runwayThresholdOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->runwayThresholdOptions().begin(); i != catalog->runwayThresholdOptions().end(); ++i)
+        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup>(*i, context, options);
 
-    if (catalog->stopwayOptions().isSet())
-        createFeatureNodes<StopwayNode, StopwayGroup>(catalog->stopwayOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->stopwayOptions().begin(); i != catalog->stopwayOptions().end(); ++i)
+        createFeatureNodes<StopwayNode, StopwayGroup>(*i, context, options);
 
-    if (catalog->linearFeatureOptions().isSet())
-        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup>(catalog->linearFeatureOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->linearFeatureOptions().begin(); i != catalog->linearFeatureOptions().end(); ++i)
+        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup>(*i, context, options);
 
-    if (catalog->startupLocationOptions().isSet())
-        createFeatureNodes<StartupLocationNode, StartupLocationGroup>(catalog->startupLocationOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->startupLocationOptions().begin(); i != catalog->startupLocationOptions().end(); ++i)
+        createFeatureNodes<StartupLocationNode, StartupLocationGroup>(*i, context, options);
 
-    if (catalog->lightBeaconOptions().isSet())
-        createFeatureNodes<LightBeaconNode, LightBeaconGroup>(catalog->lightBeaconOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->lightBeaconOptions().begin(); i != catalog->lightBeaconOptions().end(); ++i)
+        createFeatureNodes<LightBeaconNode, LightBeaconGroup>(*i, context, options);
 
-    if (catalog->lightIndicatorOptions().isSet())
-        createFeatureNodes<LightIndicatorNode, LightIndicatorGroup>(catalog->lightIndicatorOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->lightIndicatorOptions().begin(); i != catalog->lightIndicatorOptions().end(); ++i)
+         createFeatureNodes<LightIndicatorNode, LightIndicatorGroup>(*i, context, options);
 
-    if (catalog->windsockOptions().isSet())
-        createFeatureNodes<WindsockNode, WindsockGroup>(catalog->windsockOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->windsockOptions().begin(); i != catalog->windsockOptions().end(); ++i)
+        createFeatureNodes<WindsockNode, WindsockGroup>(*i, context, options);
 
-    if (catalog->terminalOptions().isSet())
-        createFeatureNodes<TerminalNode, TerminalGroup>(catalog->terminalOptions().value(), context, options);
+    for(AerodromeOptionsSet::const_iterator i = catalog->terminalOptions().begin(); i != catalog->terminalOptions().end(); ++i)
+        createFeatureNodes<TerminalNode, TerminalGroup>(*i, context, options);
 
     OE_NOTICE << LC << "Created " << context.aerodromes.size() << " aerodromes." << std::endl;
 

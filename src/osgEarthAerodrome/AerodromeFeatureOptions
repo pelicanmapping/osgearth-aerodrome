@@ -175,6 +175,8 @@ namespace osgEarth { namespace Aerodrome
         optional<ModelOptions> _modelOptions;
     };
 
+    typedef std::list<class AerodromeFeatureOptions> AerodromeOptionsSet;
+
 } } // namespace osgEarth::Aerodrome
 
 #endif // OSGEARTH_AERODROME_AERODROMEFEATUREOPTIONS
