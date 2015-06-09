@@ -273,8 +273,8 @@ AerodromeRenderer::apply(LightBeaconNode& node)
 
     osg::Node* geom;
 
-    if (node.getOptions().modelOptions().isSet() && node.getOptions().modelOptions()->url().isSet())
-        geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions()->url().value().full(), node.getOptions().modelOptions()->scale().get());
+    if (node.getOptions().modelOptions().size() > 0)
+        geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
     else
         geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
 
@@ -289,8 +289,8 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
 
     osg::Node* geom;
 
-    if (node.getOptions().modelOptions().isSet() && node.getOptions().modelOptions()->url().isSet())
-        geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions()->url().value().full(), node.getOptions().modelOptions()->scale().get());
+    if (node.getOptions().modelOptions().size() > 0)
+        geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
     else
         geom = defaultFeatureRenderer(feature.get(), Color::Red);
 
@@ -521,8 +521,8 @@ AerodromeRenderer::apply(WindsockNode& node)
 
     osg::Node* geom;
 
-    if (node.getOptions().modelOptions().isSet() && node.getOptions().modelOptions()->url().isSet())
-        geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions()->url().value().full(), node.getOptions().modelOptions()->scale().get());
+    if (node.getOptions().modelOptions().size() > 0)
+        geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
     else
         geom = defaultFeatureRenderer(feature.get(), Color::Orange);
 
@@ -760,17 +760,26 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
 }
 
 osg::Node*
-AerodromeRenderer::featureModelRenderer(osgEarth::Features::Feature* feature, const std::string& url, float scale)
+AerodromeRenderer::featureModelRenderer(osgEarth::Features::Feature* feature, const ModelOptionsSet& modelOptions)
 {
-    // construct url string w/ scale in necessary
-    std::string modelUrl = url + (scale != 1.0f ? "." + toString(scale) + ".scale" : "");
-
     Style style;
 
     ModelSymbol* model = style.getOrCreate<ModelSymbol>();
-    model->url()->setLiteral(modelUrl);
     model->scale()->setLiteral( 1.0 );
     model->placement() = model->PLACEMENT_VERTEX;
+
+    for (ModelOptionsSet::const_iterator i = modelOptions.begin(); i != modelOptions.end(); i++)
+    {
+        if (!i->selector().isSet() ||
+            (i->selector()->attr().isSet() && i->selector()->value().isSet() && feature->getString(i->selector()->attr().value()) == i->selector()->value().value()))
+        {
+            // construct url string w/ scale in necessary
+            float scale = i->scale().isSet() ? i->scale().get() : 1.0f;
+            std::string url = i->url().isSet() ? i->url().value().full() : "";
+            std::string modelUrl = url + (scale != 1.0f ? "." + toString(scale) + ".scale" : "");
+            model->url()->setLiteral(modelUrl);
+        }
+    }
 
     style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
     style.getOrCreate<AltitudeSymbol>()->verticalOffset() = _elevation;

@@ -13,8 +13,8 @@
                         <url>./z_APTLightBeacon.shp</url>
                 </features>
 
-                <model scale="5.0">
-                        <url>../../data/models/light_beacon/antenas.flt</url>
+                <model scale="1000.0">
+                        <url>../../data/models/taxiway/taxiway.flt</url>
                 </model>
         </light_beacons>
 
@@ -23,9 +23,20 @@
                         <url>./z_VASI_PAPI_WIGWAG.shp</url>
                 </features>
 
-                <model scale="2.0">
-                        <url>../../data/models/indicator_lights/airport_light.flt</url>
+                <model scale="6.0">
+                        <url>../../data/models/papi/PAPI-Lights.flt</url>
                 </model>
+
+                <model scale="6.0">
+                        <url>../../data/models/vasi/vasi.flt</url>
+                        <selector attr="type" value="VASI"/>
+                </model>
+
+                <model scale="100.0">
+                        <url>../../data/models/wigwag/wigwag.flt</url>
+                        <selector attr="type" value="Wig-Wag lights"/>
+                </model>
+
         </light_indicators>
 
         <linear_features>
