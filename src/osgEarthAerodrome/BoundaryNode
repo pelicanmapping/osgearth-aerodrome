@@ -37,9 +37,26 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT BoundaryNode : public AerodromeFeatureNode
     {
     public:
-        BoundaryNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature) { }
+        BoundaryNode(const BoundaryFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature), _boundaryOptions(options) { }
 
         virtual ~BoundaryNode() { }
+        
+    public: // properties
+        bool hasElevation()
+        {
+            if (_boundaryOptions.elevationAttr().isSet() && _feature->hasAttr(_boundaryOptions.elevationAttr().value()))
+                return true;
+
+            return false;
+        }
+
+        double elevation()
+        {
+            return hasElevation() ? _feature->getDouble(_boundaryOptions.elevationAttr().value(), DBL_MIN) : DBL_MIN;
+        }
+
+    protected:
+        BoundaryFeatureOptions _boundaryOptions;
     };
 
     

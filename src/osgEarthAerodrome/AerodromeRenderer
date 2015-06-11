@@ -81,7 +81,7 @@ namespace osgEarth { namespace Aerodrome
 
     protected:
 
-        void createLocalizations(const osgEarth::Bounds& bounds);
+        void createLocalizations(const osgEarth::Bounds& bounds, BoundaryNode* boundary=0L);
 
         void transformAndLocalize(const std::vector<osg::Vec3d>& input,
                                   const SpatialReference*        inputSRS,

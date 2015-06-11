@@ -214,7 +214,6 @@ namespace osgEarth { namespace Aerodrome
             fromConfig( conf );
         }
 
-    private:
         void fromConfig( const Config& conf ) {
             conf.getIfSet( "icao_attr", _icaoAttr );
             conf.getObjIfSet( "features", _featureOptions );
@@ -224,6 +223,8 @@ namespace osgEarth { namespace Aerodrome
             for (ConfigSet::const_iterator i = models.begin(); i != models.end(); i++)
                 _modelOptions.push_back(ModelOptions(*i));
         }
+
+    private:
      
         optional<std::string> _icaoAttr;
         optional<FeatureSourceOptions> _featureOptions;
@@ -232,6 +233,52 @@ namespace osgEarth { namespace Aerodrome
     };
 
     typedef std::list<class AerodromeFeatureOptions> AerodromeOptionsSet;
+
+    /**
+     * Options for the Aerodrome features
+     */
+    class BoundaryFeatureOptions : public AerodromeFeatureOptions
+    {
+    public:
+        /** ICAO code attribute name */
+        optional<std::string>& elevationAttr() { return _elevationAttr; }
+        const optional<std::string>& elevationAttr() const { return _elevationAttr; }    
+
+    public:
+        BoundaryFeatureOptions( const ConfigOptions& opt =ConfigOptions() ) :
+          AerodromeFeatureOptions( opt )
+        {            
+            fromConfig( _conf );
+        }
+
+        virtual ~BoundaryFeatureOptions() { }
+
+    public:
+        Config getConfig() const {
+            Config conf = AerodromeFeatureOptions::getConfig();
+            conf.updateIfSet( "elevation_attr", _elevationAttr );
+
+            return conf;
+        }
+
+    protected:
+        void mergeConfig( const Config& conf ) {
+            AerodromeFeatureOptions::mergeConfig( conf );
+            fromConfig( conf );
+        }
+
+        void fromConfig( const Config& conf ) {
+            AerodromeFeatureOptions::fromConfig(conf);
+
+            conf.getIfSet( "elevation_attr", _elevationAttr );
+        }
+
+    private:
+     
+        optional<std::string> _elevationAttr;
+    };
+
+    typedef std::list<class BoundaryFeatureOptions> BoundaryOptionsSet;
 
 } } // namespace osgEarth::Aerodrome
 

@@ -2,9 +2,9 @@
 
 	<description>Aerodrome test catalog</description>
 
-        <boundaries>
+        <boundaries elevation_attr="ELEVATION">
                 <features name="xplane_airport_boundaries" driver="ogr">
-                        <url>./z_APTBoundary.shp</url>
+                        <url>./APTBoundary_Elev_v3.shp</url>
                 </features>
         </boundaries>
 
@@ -13,7 +13,7 @@
                         <url>./z_APTLightBeacon.shp</url>
                 </features>
 
-                <model scale="1000.0">
+                <model>
                         <url>../../data/models/taxiway/taxiway.flt</url>
                 </model>
         </light_beacons>
@@ -23,20 +23,19 @@
                         <url>./z_VASI_PAPI_WIGWAG.shp</url>
                 </features>
 
-                <model scale="6.0">
+                <model>
                         <url>../../data/models/papi/PAPI-Lights.flt</url>
                 </model>
 
-                <model scale="6.0">
+                <model>
                         <url>../../data/models/vasi/vasi.flt</url>
                         <selector attr="type" value="VASI"/>
                 </model>
 
-                <model scale="100.0">
+                <model>
                         <url>../../data/models/wigwag/wigwag.flt</url>
                         <selector attr="type" value="Wig-Wag lights"/>
                 </model>
-
         </light_indicators>
 
         <linear_features>
@@ -105,7 +104,7 @@
                         <url>./z_APTWindsock.shp</url>
                 </features>
 
-                <model scale="2.0">
+                <model>
                         <url>../../data/models/windsock/air_speed.flt</url>
                 </model>
         </windsocks>

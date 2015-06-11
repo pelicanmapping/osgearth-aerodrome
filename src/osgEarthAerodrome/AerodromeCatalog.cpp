@@ -42,7 +42,7 @@ AerodromeCatalog::fromConfig(const Config& conf)
 
     ConfigSet boundaries = conf.children("boundaries");
     for (ConfigSet::const_iterator i = boundaries.begin(); i != boundaries.end(); i++)
-        _boundaryOptions.push_back(AerodromeFeatureOptions(*i));
+        _boundaryOptions.push_back(BoundaryFeatureOptions(*i));
 
     ConfigSet lightBeacons = conf.children("light_beacons");
     for (ConfigSet::const_iterator i = lightBeacons.begin(); i != lightBeacons.end(); i++)
@@ -95,7 +95,7 @@ AerodromeCatalog::getConfig() const
     Config conf;
     conf.addIfSet("version", _version);
 
-    for(AerodromeOptionsSet::const_iterator i = _boundaryOptions.begin(); i != _boundaryOptions.end(); ++i)
+    for(BoundaryOptionsSet::const_iterator i = _boundaryOptions.begin(); i != _boundaryOptions.end(); ++i)
         conf.add("boundaries", i->getConfig());
 
     for(AerodromeOptionsSet::const_iterator i = _lightBeaconOptions.begin(); i != _lightBeaconOptions.end(); ++i)

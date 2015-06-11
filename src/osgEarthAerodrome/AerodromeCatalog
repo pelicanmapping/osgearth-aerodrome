@@ -47,8 +47,8 @@ namespace osgEarth { namespace Aerodrome
 
     public: // properties
 
-        AerodromeOptionsSet& boundaryOptions() { return _boundaryOptions; }
-        const AerodromeOptionsSet& boundaryOptions() const { return _boundaryOptions; }
+        BoundaryOptionsSet& boundaryOptions() { return _boundaryOptions; }
+        const BoundaryOptionsSet& boundaryOptions() const { return _boundaryOptions; }
 
         AerodromeOptionsSet& lightBeaconOptions() { return _lightBeaconOptions; }
         const AerodromeOptionsSet& lightBeaconOptions() const { return _lightBeaconOptions; }
@@ -99,7 +99,7 @@ namespace osgEarth { namespace Aerodrome
     protected:
 
         optional<int> _version;
-        AerodromeOptionsSet _boundaryOptions;
+        BoundaryOptionsSet _boundaryOptions;
         AerodromeOptionsSet _lightBeaconOptions;
         AerodromeOptionsSet _lightIndicatorOptions;
         AerodromeOptionsSet _linearFeatureOptions;

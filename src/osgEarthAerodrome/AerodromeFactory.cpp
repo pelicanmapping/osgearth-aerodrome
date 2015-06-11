@@ -124,15 +124,15 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
     OE_NOTICE << LC << featureCount << " feature nodes created." << std::endl;
 }
 
-void AerodromeFactory::createBoundaryNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options)
+void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeContext& context, const osgDB::Options* options)
 {
-    if (!featureOpts.featureOptions().isSet())
+    if (!boundaryOpts.featureOptions().isSet())
     {
         OE_WARN << LC << "Cannot create feature: feature source is not set." << std::endl;
         return;
     }
 
-    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
+    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(boundaryOpts.featureOptions().value());
     featureSource->initialize(options);
     
     OE_NOTICE << LC << "Reading features...\n";
@@ -151,7 +151,7 @@ void AerodromeFactory::createBoundaryNodes(AerodromeFeatureOptions featureOpts, 
 
         /* **************************************** */
 
-        std::string icao = f->getString(featureOpts.icaoAttr().value());
+        std::string icao = f->getString(boundaryOpts.icaoAttr().value());
         if (!icao.empty())
         {
             osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
@@ -164,7 +164,7 @@ void AerodromeFactory::createBoundaryNodes(AerodromeFeatureOptions featureOpts, 
                     an->bounds().expandBy(f->getGeometry()->getBounds());
 
                 // create new node and add to parent AerodromeNode
-                an->setBoundary(new BoundaryNode(featureOpts, icao, f));
+                an->setBoundary(new BoundaryNode(boundaryOpts, icao, f));
                 featureCount++;
             }            
         }
@@ -196,7 +196,7 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
 
     AerodromeContext context;
 
-    for(AerodromeOptionsSet::const_iterator i = catalog->boundaryOptions().begin(); i != catalog->boundaryOptions().end(); ++i)
+    for(BoundaryOptionsSet::const_iterator i = catalog->boundaryOptions().begin(); i != catalog->boundaryOptions().end(); ++i)
         createBoundaryNodes(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->pavementOptions().begin(); i != catalog->pavementOptions().end(); ++i)

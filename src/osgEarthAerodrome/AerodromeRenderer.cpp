@@ -145,61 +145,63 @@ AerodromeRenderer::apply(AerodromeNode& node)
         osg::ref_ptr<Geometry> featureGeom = boundary->getFeature()->getGeometry();
 
         // create localizations for this aerodrome
-        createLocalizations(featureGeom->getBounds());
+        createLocalizations(featureGeom->getBounds(), boundary.get());
 
-        // create ground geometry beneath the aerodrome
-        osg::Geometry* geometry = new osg::Geometry();
-        geometry->setUseVertexBufferObjects( true );
-        //geometry->setUseDisplayList( false );
-
-        std::vector<osg::Vec3d> boundaryPoints;
-        
-        osg::ref_ptr<osg::Vec3dArray> geomPoints = featureGeom->toVec3dArray();
-        if (geomPoints && geomPoints->size() > 0)
+        // if the boundary has an elevation value then assume flattening, otherwise draw a base poly and add a mask.
+        if (!boundary->hasElevation())
         {
-            for (int i=0; i < geomPoints->size(); i++)
-                boundaryPoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
-        }
+            // create ground geometry beneath the aerodrome
+            osg::Geometry* geometry = new osg::Geometry();
+            geometry->setUseVertexBufferObjects( true );
+            //geometry->setUseDisplayList( false );
 
-        //osg::Vec3Array* normals = new osg::Vec3Array();
-        osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(boundaryPoints, _map->getSRS(), verts, 0L);
-
-        geometry->setVertexArray( verts );
-
-        osg::Vec4Array* colors = new osg::Vec4Array;
-        colors->push_back(osg::Vec4(0.557f,0.522f,0.459f,1.0f));
-        geometry->setColorArray(colors);
-        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-        //TODO: texture coords
-        //osg::Vec2Array* tcoords = new osg::Vec2Array();
-        //geometry->setTexCoordArray(0,tcoords);
-
-        geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
-
-        //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
-        geometry->setName(node.icao() + "_AERODROME_TERRAIN");
-
-        osgEarth::Tessellator tess;
-        tess.tessellateGeometry(*geometry);
-
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-        geode->addDrawable(geometry);
-
-        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
-
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
-
-        osg::MatrixTransform* mt = new osg::MatrixTransform();
-        mt->setMatrix(_local2world);
-        mt->addChild(geode);
-        node.insertChild(0, mt);
+            std::vector<osg::Vec3d> boundaryPoints;
         
-        // create mask layer based on boundary
-        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
-        node.setMaskLayer(mask);
-        _map->addTerrainMaskLayer(mask);
+            osg::ref_ptr<osg::Vec3dArray> geomPoints = featureGeom->toVec3dArray();
+            if (geomPoints && geomPoints->size() > 0)
+            {
+                for (int i=0; i < geomPoints->size(); i++)
+                    boundaryPoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+            }
+
+            //osg::Vec3Array* normals = new osg::Vec3Array();
+            osg::Vec3Array* verts = new osg::Vec3Array();
+            transformAndLocalize(boundaryPoints, _map->getSRS(), verts, 0L);
+
+            geometry->setVertexArray( verts );
+
+            osg::Vec4Array* colors = new osg::Vec4Array;
+            colors->push_back(osg::Vec4(0.557f,0.522f,0.459f,1.0f));
+            geometry->setColorArray(colors);
+            geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+            //TODO: texture coords
+            //osg::Vec2Array* tcoords = new osg::Vec2Array();
+            //geometry->setTexCoordArray(0,tcoords);
+
+            geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
+
+            //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
+            geometry->setName(node.icao() + "_AERODROME_TERRAIN");
+
+            osgEarth::Tessellator tess;
+            tess.tessellateGeometry(*geometry);
+
+            osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+            geode->addDrawable(geometry);
+
+            Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+
+            osg::MatrixTransform* mt = new osg::MatrixTransform();
+            mt->setMatrix(_local2world);
+            mt->addChild(geode);
+            node.insertChild(0, mt);
+        
+            // create mask layer based on boundary
+            osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
+            node.setMaskLayer(mask);
+            _map->addTerrainMaskLayer(mask);
+        }
     }
     else if (node.bounds().valid())
     {
@@ -246,8 +248,6 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
-
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
         mt->addChild(geode);
@@ -262,6 +262,10 @@ AerodromeRenderer::apply(AerodromeNode& node)
     {
         _elevation = 0.0;
     }
+
+    
+    node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
+    //node.getOrCreateStateSet()->setRenderBinDetails(9999, "RenderBin");
 
     traverse(node);
 }
@@ -295,14 +299,17 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
         geom = defaultFeatureRenderer(feature.get(), Color::Red);
 
     if (geom)
+    {
+        Registry::shaderGenerator().run(geom, "osgEarth.AerodromeRenderer");
         node.addChild(geom);
+    }
 }
 
 void
 AerodromeRenderer::apply(LinearFeatureNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
+    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color(0.96, 0.78, 0.0, 3.0));
     if (geom)
         node.addChild(geom);
 }
@@ -321,7 +328,6 @@ AerodromeRenderer::apply(PavementNode& node)
     else
     {
         geom = defaultFeatureRenderer(feature.get(), Color(0.6, 0.6, 0.6, 1.0));
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
     }
 
     if (geom.valid())
@@ -364,8 +370,8 @@ AerodromeRenderer::apply(RunwayNode& node)
                 osg::Texture2D* _texture = new osg::Texture2D(tex);
                 _texture->setWrap(_texture->WRAP_S, _texture->CLAMP_TO_EDGE);
                 _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
-                _texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::NEAREST); 
-                _texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::NEAREST);
+                //_texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::NEAREST); 
+                //_texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::NEAREST);
                 _texture->setResizeNonPowerOfTwoHint(false);
                 geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
 
@@ -427,8 +433,6 @@ AerodromeRenderer::apply(RunwayNode& node)
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
-
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
         mt->addChild(geode);
@@ -438,7 +442,6 @@ AerodromeRenderer::apply(RunwayNode& node)
     else
     {
         geom = defaultFeatureRenderer(feature.get(), Color(0.4, 0.4, 0.4, 1.0));
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
     }
 
     if (geom.valid())
@@ -453,10 +456,7 @@ AerodromeRenderer::apply(RunwayThresholdNode& node)
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
     if (geom)
-    {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
         node.addChild(geom);
-    }
 }
 
 void
@@ -474,10 +474,7 @@ AerodromeRenderer::apply(StopwayNode& node)
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
     if (geom)
-    {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
         node.addChild(geom);
-    }
 }
 
 void
@@ -494,7 +491,6 @@ AerodromeRenderer::apply(TaxiwayNode& node)
     else
     {
         geom = defaultFeatureRenderer(feature.get(), Color(0.6, 0.6, 0.6, 1.0));
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
     }
 
     if (geom.valid())
@@ -747,8 +743,6 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
 
         Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
-        geode->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
-
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
         mt->addChild(geode);
@@ -848,14 +842,21 @@ AerodromeRenderer::defaultFeatureRenderer(osgEarth::Features::Feature* feature, 
 }
 
 void
-AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds)
+AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds, BoundaryNode* boundary)
 {
     // use the center of the bounds as an anchor for localization
     GeoPoint anchor(_map->getSRS(), bounds.center().x(), bounds.center().y());
 
     // get a common elevation for the aerodrome
-    ElevationQuery eq(_map.get());
-    eq.getElevation(anchor, _elevation, 0.005);
+    if (boundary && boundary->hasElevation())
+    {
+        _elevation = boundary->elevation() + 0.5;
+    }
+    else
+    {
+        ElevationQuery eq(_map.get());
+        eq.getElevation(anchor, _elevation, 0.005);
+    }
 
     // create a w2l matrix for the aerodrome
     GeoPoint p(anchor.getSRS(), anchor.x(), anchor.y(), _elevation, ALTMODE_ABSOLUTE);
