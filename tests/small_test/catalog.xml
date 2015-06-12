@@ -4,7 +4,7 @@
 
         <boundaries elevation_attr="ELEVATION">
                 <features name="xplane_airport_boundaries" driver="ogr">
-                        <url>./APTBoundary_Elev_v3.shp</url>
+                        <url>./APTBoundary_Elev_v4.shp</url>
                 </features>
         </boundaries>
 
@@ -14,7 +14,7 @@
                 </features>
 
                 <model>
-                        <url>../../data/models/taxiway/taxiway.flt</url>
+                        <url>../../data/models/light_beacon/antenas.flt</url>
                 </model>
         </light_beacons>
 
