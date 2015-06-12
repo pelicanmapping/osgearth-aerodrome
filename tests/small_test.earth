@@ -99,6 +99,8 @@
                 
             ]]></code>
         </terrainshader>
+
+        <sky driver="simple" hours="14.0"/>
             
     </extensions>
 

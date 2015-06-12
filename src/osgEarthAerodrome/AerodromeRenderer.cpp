@@ -309,7 +309,7 @@ void
 AerodromeRenderer::apply(LinearFeatureNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color(0.96, 0.78, 0.0, 3.0));
+    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color(0.75f, 0.65f, 0.15f, 0.8f));
     if (geom)
         node.addChild(geom);
 }
@@ -359,6 +359,11 @@ AerodromeRenderer::apply(RunwayNode& node)
 
         osg::Geometry* geometry = new osg::Geometry();
         geometry->setVertexArray( verts );
+
+        osg::Vec3Array* normals = new osg::Vec3Array();
+        normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
+        geometry->setNormalArray( normals );
+        geometry->setNormalBinding( osg::Geometry::BIND_OVERALL );
 
         osg::Vec4Array* colors = new osg::Vec4Array;
 
@@ -422,7 +427,6 @@ AerodromeRenderer::apply(RunwayNode& node)
 
         geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
 
-        //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
         geometry->setName(node.icao() + "_AERODROME_RUNWAY");
 
         //osgEarth::Tessellator tess;
@@ -462,10 +466,11 @@ AerodromeRenderer::apply(RunwayThresholdNode& node)
 void
 AerodromeRenderer::apply(StartupLocationNode& node)
 {
-    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
-    if (geom)
-        node.addChild(geom);
+    // we don't necessarily want to render statup locations
+    //osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+    //osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
+    //if (geom)
+    //    node.addChild(geom);
 }
 
 void
@@ -693,12 +698,16 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
             featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
         }
 
-        //osg::Vec3Array* normals = new osg::Vec3Array();
         osg::Vec3Array* verts = new osg::Vec3Array();
         transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
 
         osg::Geometry* geometry = new osg::Geometry();
         geometry->setVertexArray( verts );
+
+        osg::Vec3Array* normals = new osg::Vec3Array();
+        normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
+        geometry->setNormalArray( normals );
+        geometry->setNormalBinding( osg::Geometry::BIND_OVERALL );
 
         osg::Vec4Array* colors = new osg::Vec4Array;
 
@@ -809,7 +818,8 @@ AerodromeRenderer::defaultFeatureRenderer(osgEarth::Features::Feature* feature, 
     else
     {
         style.getOrCreate<LineSymbol>()->stroke()->color() = color;
-        //style.getOrCreate<LineSymbol>()->stroke()->width() = 3.0f;
+        style.getOrCreate<LineSymbol>()->stroke()->width() = 1.0f;
+        style.getOrCreate<LineSymbol>()->stroke()->widthUnits() = Units::METERS;
     }
 
     if (height > 0.0)
