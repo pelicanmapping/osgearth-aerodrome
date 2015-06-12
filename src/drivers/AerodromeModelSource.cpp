@@ -59,7 +59,6 @@ AerodromeModelSource::initialize(const osgDB::Options* dbOptions)
 
 osg::Node*
 AerodromeModelSource::createNodeImplementation(const Map*            map,
-                                               const osgDB::Options* dbOptions,
                                                ProgressCallback*     progress )
 {
     //AerodromeFactory factory(map);

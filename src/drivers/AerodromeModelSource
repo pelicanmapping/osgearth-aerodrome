@@ -53,7 +53,6 @@ namespace osgEarth { namespace Drivers { namespace Aerodrome
 
         virtual osg::Node* createNodeImplementation(
             const Map*            map,
-            const osgDB::Options* dbOptions,
             ProgressCallback*     progress );
     
     //public: // properties:

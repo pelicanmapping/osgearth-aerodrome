@@ -37,6 +37,7 @@
 #include <osg/Geometry>
 #include <osg/MatrixTransform>
 #include <osg/Depth>
+#include <osg/Texture2D>
 #include <osgEarth/ECEF>
 #include <osgEarth/ElevationQuery>
 #include <osgEarth/Registry>
