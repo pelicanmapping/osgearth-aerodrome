@@ -265,7 +265,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
     }
 
     
-    node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, false) );
+    node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
     //node.getOrCreateStateSet()->setRenderBinDetails(9999, "RenderBin");
 
     traverse(node);
@@ -861,7 +861,7 @@ AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds, BoundaryN
     // get a common elevation for the aerodrome
     if (boundary && boundary->hasElevation())
     {
-        _elevation = boundary->elevation() + 0.5;
+        _elevation = boundary->elevation();
     }
     else
     {
