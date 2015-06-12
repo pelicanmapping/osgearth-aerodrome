@@ -458,16 +458,17 @@ AerodromeRenderer::apply(RunwayNode& node)
 void
 AerodromeRenderer::apply(RunwayThresholdNode& node)
 {
-    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
-    if (geom)
-        node.addChild(geom);
+    // We don't necessarily want to render statup locations (metadata)
+    //osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+    //osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
+    //if (geom)
+    //    node.addChild(geom);
 }
 
 void
 AerodromeRenderer::apply(StartupLocationNode& node)
 {
-    // we don't necessarily want to render statup locations
+    // We don't necessarily want to render statup locations (metadata)
     //osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     //osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
     //if (geom)
