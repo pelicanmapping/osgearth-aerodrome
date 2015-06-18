@@ -45,6 +45,41 @@ using namespace osgEarth::Aerodrome;
 #define LC "[AerodromeFactory] "
 
 
+namespace
+{
+    template <typename T, typename Y> class FeatureNodeFinder : public osg::NodeVisitor
+    {
+    public:
+        FeatureNodeFinder(const std::string& attr, const std::string& value)
+          : _attr(attr), _value(value), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+        {
+        }
+
+        void apply(T& node)
+        {
+            if (node.getFeature()->getString(_attr) == _value)
+                _found = &node;
+        }
+
+        void apply(osg::Group& node)
+        {
+            if (dynamic_cast<AerodromeNode*>(&node) || dynamic_cast<Y*>(&node))
+                traverse(node);
+            else if (dynamic_cast<T*>(&node))
+                apply(static_cast<T&>(node));
+        }
+
+    public:
+        T* foundNode() { return _found.get(); }
+
+    private:
+        std::string _attr;
+        std::string _value;
+        osg::ref_ptr<T> _found;
+    };
+}
+
+
 AerodromeFactory::AerodromeFactory(Map* map)
   : _map(map)
 {
@@ -52,7 +87,7 @@ AerodromeFactory::AerodromeFactory(Map* map)
 }
 
 template <typename T, typename Y>
-void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options)
+void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context))
 {
     if (!featureOpts.featureOptions().isSet())
     {
@@ -109,8 +144,15 @@ void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, A
                     if (f->getGeometry())
                         an->bounds().expandBy(f->getGeometry()->getBounds());
 
-                    // create new node and add to parent AerodromeNode
-                    parentGroup->addChild(new T(featureOpts, icao, f));
+                    // create new node
+                    T* tNode = new T(featureOpts, icao, f);
+
+                    // if a processor function is passed in, call it
+                    if (processor)
+                        (this->*processor)(tNode, context);
+
+                    // add the new node to the parent AerodromeNode
+                    parentGroup->addChild(tNode);
                     featureCount++;
                 }
             }            
@@ -177,10 +219,33 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
     OE_NOTICE << LC << featureCount << " boundary nodes created." << std::endl;
 }
 
-//void
-//AerodromeFactory::createRunways(AerodromeFeatureOptions runwayOpts, AerodromeContext &context, const osgDB::Options* options)
-//{
-//}
+void AerodromeFactory::processStopwayNode(StopwayNode* stopway, AerodromeContext& context)
+{
+    if (stopway)
+    {
+        osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(stopway->icao());
+        if (an.valid())
+        {
+            std::string rwyNum = stopway->getFeature()->getString("rwy_num");
+            
+            FeatureNodeFinder<RunwayNode, RunwayGroup> finder("rwy_num1", rwyNum);
+            an->accept(finder);
+
+            osg::ref_ptr<RunwayNode> runway = finder.foundNode();
+            if (!runway.valid())
+            {
+                FeatureNodeFinder<RunwayNode, RunwayGroup> finder2("rwy_num2", rwyNum);
+                an->accept(finder2);
+                runway = finder2.foundNode();
+            }
+            
+            if (runway.valid())
+                stopway->setReferencePoint(runway->getFeature()->getGeometry()->getBounds().center());
+            else
+                OE_WARN << LC << "Could not find runway " << rwyNum << " for stopway." << std::endl;
+        }
+    }
+}
 
 osg::Group*
 AerodromeFactory::createAerodromes(const URI& uri, const osgDB::Options* options)
@@ -212,7 +277,7 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
         createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->stopwayOptions().begin(); i != catalog->stopwayOptions().end(); ++i)
-        createFeatureNodes<StopwayNode, StopwayGroup>(*i, context, options);
+        createFeatureNodes<StopwayNode, StopwayGroup>(*i, context, options, &AerodromeFactory::processStopwayNode);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->linearFeatureOptions().begin(); i != catalog->linearFeatureOptions().end(); ++i)
         createFeatureNodes<LinearFeatureNode, LinearFeatureGroup>(*i, context, options);

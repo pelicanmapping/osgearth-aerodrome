@@ -182,7 +182,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
             geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
 
             //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
-            geometry->setName(node.icao() + "_AERODROME_TERRAIN");
+            geometry->setName(node.icao() + "_TERRAIN");
 
             osgEarth::Tessellator tess;
             tess.tessellateGeometry(*geometry);
@@ -241,7 +241,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
         geometry->addPrimitiveSet( new osg::DrawArrays( GL_QUADS, 0, 4 ) );
 
         //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
-        geometry->setName(node.icao() + "_AERODROME_TERRAIN");
+        geometry->setName(node.icao() + "_TERRAIN");
 
         osg::ref_ptr<osg::Geode> geode = new osg::Geode;
         geode->addDrawable(geometry);
@@ -332,7 +332,7 @@ AerodromeRenderer::apply(PavementNode& node)
 
     if (geom.valid())
     {
-        geom->setName(node.icao() + "_AERODROME_PAVEMENT");
+        geom->setName(node.icao() + "_PAVEMENT");
         node.addChild(geom);
     }
 }
@@ -427,7 +427,7 @@ AerodromeRenderer::apply(RunwayNode& node)
 
         geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
 
-        geometry->setName(node.icao() + "_AERODROME_RUNWAY");
+        geometry->setName(node.icao() + "_RUNWAY");
 
         //osgEarth::Tessellator tess;
         //tess.tessellateGeometry(*geometry);
@@ -478,7 +478,145 @@ void
 AerodromeRenderer::apply(StopwayNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
+
+    osg::ref_ptr<osg::Node> geom;
+
+    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
+    if (geomPoints.valid() && geomPoints->size() == 4)
+    {
+        std::vector<osg::Vec3d> featurePoints;
+        for (int i=0; i < geomPoints->size(); i++)
+        {
+            featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+        }
+     
+        //osg::Vec3Array* normals = new osg::Vec3Array();
+        osg::Vec3Array* verts = new osg::Vec3Array();
+        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+
+        osg::Geometry* geometry = new osg::Geometry();
+        geometry->setVertexArray( verts );
+
+        osg::Vec3Array* normals = new osg::Vec3Array();
+        normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
+        geometry->setNormalArray( normals );
+        geometry->setNormalBinding( osg::Geometry::BIND_OVERALL );
+
+        osg::Vec4Array* colors = new osg::Vec4Array;
+
+        if (node.getOptions().textureOptions().isSet() && node.getOptions().textureOptions()->url().isSet())
+        {
+            osg::Image* tex = node.getOptions().textureOptions()->url()->getImage(_dbOptions);
+            if (tex)
+            {
+                osg::Texture2D* _texture = new osg::Texture2D(tex);
+                _texture->setWrap(_texture->WRAP_S, _texture->CLAMP_TO_EDGE);
+                _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
+                //_texture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::NEAREST); 
+                //_texture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::NEAREST);
+                _texture->setResizeNonPowerOfTwoHint(false);
+                geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
+
+                osg::Vec2Array* tcoords = new osg::Vec2Array(4);
+
+                osg::Vec3d refPoint = transformAndLocalize(node.getReferencePoint(), _map->getSRS());
+
+                float side1 = (refPoint - (((*verts)[1] + (*verts)[0]) / 2.0)).length();
+                float side2 = (refPoint - (((*verts)[2] + (*verts)[1]) / 2.0)).length();
+                float side3 = (refPoint - (((*verts)[3] + (*verts)[2]) / 2.0)).length();
+                float side4 = (refPoint - (((*verts)[0] + (*verts)[3]) / 2.0)).length();
+
+                if (side1 < side2 && side1 < side3 && side1 < side4)
+                {
+                    float width = ((*verts)[1] - (*verts)[0]).length();
+                    float scale = width / tex->getPixelAspectRatio();
+                    float length = ((*verts)[0] - (*verts)[3]).length();
+                    float repeat = length / scale;
+
+                    (*tcoords)[2].set(0.0f,0.0f);
+                    (*tcoords)[3].set(1.0f,0.0f);
+                    (*tcoords)[0].set(1.0f,repeat);
+                    (*tcoords)[1].set(0.0f,repeat);
+                }
+                else if (side2 < side3 && side2 < side4)
+                {
+                    float width = ((*verts)[2] - (*verts)[1]).length();
+                    float scale = width / tex->getPixelAspectRatio();
+                    float length = ((*verts)[1] - (*verts)[0]).length();
+                    float repeat = length / scale;
+
+                    (*tcoords)[3].set(0.0f,0.0f);
+                    (*tcoords)[0].set(1.0f,0.0f);
+                    (*tcoords)[1].set(1.0f,repeat);
+                    (*tcoords)[2].set(0.0f,repeat);
+                }
+                else if (side3 < side4)
+                {
+                    float width = ((*verts)[3] - (*verts)[2]).length();
+                    float scale = width / tex->getPixelAspectRatio();
+                    float length = ((*verts)[2] - (*verts)[1]).length();
+                    float repeat = length / scale;
+
+                    (*tcoords)[0].set(0.0f,0.0f);
+                    (*tcoords)[1].set(1.0f,0.0f);
+                    (*tcoords)[2].set(1.0f,repeat);
+                    (*tcoords)[3].set(0.0f,repeat);
+                }
+                else
+                {
+                    float width = ((*verts)[0] - (*verts)[3]).length();
+                    float scale = width / tex->getPixelAspectRatio();
+                    float length = ((*verts)[3] - (*verts)[2]).length();
+                    float repeat = length / scale;
+
+                    (*tcoords)[1].set(0.0f,0.0f);
+                    (*tcoords)[2].set(1.0f,0.0f);
+                    (*tcoords)[3].set(1.0f,repeat);
+                    (*tcoords)[0].set(0.0f,repeat);
+                }
+
+                geometry->setTexCoordArray(0,tcoords);
+            }
+            else
+            {
+                OE_WARN << LC << "Error reading texture file: " << node.getOptions().textureOptions()->url()->full() << std::endl;
+            }
+
+
+
+            colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
+        }
+        else
+        {
+            colors->push_back(osg::Vec4(0.4f,0.4f,0.4f,1.0f));
+        }
+
+        geometry->setColorArray(colors);
+        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+        geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
+
+        geometry->setName(node.icao() + "_STOPWAY");
+
+        //osgEarth::Tessellator tess;
+        //tess.tessellateGeometry(*geometry);
+
+        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+        geode->addDrawable(geometry);
+
+        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+
+        osg::MatrixTransform* mt = new osg::MatrixTransform();
+        mt->setMatrix(_local2world);
+        mt->addChild(geode);
+
+        geom = mt;
+    }
+    else
+    {
+        geom = defaultFeatureRenderer(feature.get(), Color::White);
+    }
+
     if (geom)
         node.addChild(geom);
 }
@@ -501,7 +639,7 @@ AerodromeRenderer::apply(TaxiwayNode& node)
 
     if (geom.valid())
     {
-        geom->setName(node.icao() + "_AERODROME_TAXIWAY");
+        geom->setName(node.icao() + "_TAXIWAY");
         node.addChild(geom);
     }
 }
@@ -904,4 +1042,17 @@ AerodromeRenderer::transformAndLocalize(const std::vector<osg::Vec3d>& input,
         local.z() = 0.0;
         output_verts->push_back(local);
     }
+}
+
+osg::Vec3d
+AerodromeRenderer::transformAndLocalize(const osg::Vec3d& input, const SpatialReference* inputSRS)
+{
+    GeoPoint vert(inputSRS, input, osgEarth::ALTMODE_ABSOLUTE);
+
+    osg::Vec3d world;
+    vert.toWorld(world);
+    osg::Vec3d local = world * _world2local;
+    local.z() = 0.0;
+
+    return local;
 }

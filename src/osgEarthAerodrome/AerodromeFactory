@@ -25,7 +25,7 @@
 #include "AerodromeNode"
 #include "AerodromeCatalog"
 #include "AerodromeFeatureOptions"
-//#include "RunwayNode"
+#include "StopwayNode"
 #include <osgEarth/Map>
 
 
@@ -84,11 +84,10 @@ namespace osgEarth { namespace Aerodrome
             };
         };
 
-        //void createRunways(AerodromeFeatureOptions runwayOpts, AerodromeContext& context, const osgDB::Options* options);
-
-        template <typename T, typename Y> void createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options);
-
+        template <typename T, typename Y> void createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context)=0L);
         void createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeContext& context, const osgDB::Options* options);
+
+        void processStopwayNode(StopwayNode* stopway, AerodromeContext& context);
 
 /* ********** TEMPORARY ********** */
         osg::ref_ptr<Map> _map;

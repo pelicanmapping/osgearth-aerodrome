@@ -88,6 +88,8 @@ namespace osgEarth { namespace Aerodrome
                                   osg::Vec3Array*                output_verts,
                                   osg::Vec3Array*                output_normals);
 
+        osg::Vec3d transformAndLocalize(const osg::Vec3d& input, const SpatialReference* inputSRS);
+
         template <typename T, typename Y> osgEarth::Symbology::Geometry* combineGeometries(T& group);
 
         
