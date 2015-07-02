@@ -86,8 +86,8 @@ AerodromeFactory::AerodromeFactory(Map* map)
     //nop
 }
 
-template <typename T, typename Y>
-void AerodromeFactory::createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context))
+template <typename T, typename Y, typename P>
+void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context))
 {
     if (!featureOpts.featureOptions().isSet())
     {
@@ -265,37 +265,37 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
         createBoundaryNodes(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->pavementOptions().begin(); i != catalog->pavementOptions().end(); ++i)
-        createFeatureNodes<PavementNode, PavementGroup>(*i, context, options);
+        createFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->taxiwayOptions().begin(); i != catalog->taxiwayOptions().end(); ++i)
-        createFeatureNodes<TaxiwayNode, TaxiwayGroup>(*i, context, options);
+        createFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayOptions().begin(); i != catalog->runwayOptions().end(); ++i)
-        createFeatureNodes<RunwayNode, RunwayGroup>(*i, context, options);
+        createFeatureNodes<RunwayNode, RunwayGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayThresholdOptions().begin(); i != catalog->runwayThresholdOptions().end(); ++i)
-        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup>(*i, context, options);
+        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->stopwayOptions().begin(); i != catalog->stopwayOptions().end(); ++i)
-        createFeatureNodes<StopwayNode, StopwayGroup>(*i, context, options, &AerodromeFactory::processStopwayNode);
+        createFeatureNodes<StopwayNode, StopwayGroup, AerodromeFeatureOptions>(*i, context, options, &AerodromeFactory::processStopwayNode);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->linearFeatureOptions().begin(); i != catalog->linearFeatureOptions().end(); ++i)
-        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup>(*i, context, options);
+        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->startupLocationOptions().begin(); i != catalog->startupLocationOptions().end(); ++i)
-        createFeatureNodes<StartupLocationNode, StartupLocationGroup>(*i, context, options);
+        createFeatureNodes<StartupLocationNode, StartupLocationGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightBeaconOptions().begin(); i != catalog->lightBeaconOptions().end(); ++i)
-        createFeatureNodes<LightBeaconNode, LightBeaconGroup>(*i, context, options);
+        createFeatureNodes<LightBeaconNode, LightBeaconGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightIndicatorOptions().begin(); i != catalog->lightIndicatorOptions().end(); ++i)
-         createFeatureNodes<LightIndicatorNode, LightIndicatorGroup>(*i, context, options);
+         createFeatureNodes<LightIndicatorNode, LightIndicatorGroup, AerodromeFeatureOptions>(*i, context, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->windsockOptions().begin(); i != catalog->windsockOptions().end(); ++i)
-        createFeatureNodes<WindsockNode, WindsockGroup>(*i, context, options);
+        createFeatureNodes<WindsockNode, WindsockGroup, AerodromeFeatureOptions>(*i, context, options);
 
-    for(AerodromeOptionsSet::const_iterator i = catalog->terminalOptions().begin(); i != catalog->terminalOptions().end(); ++i)
-        createFeatureNodes<TerminalNode, TerminalGroup>(*i, context, options);
+    for(TerminalOptionsSet::const_iterator i = catalog->terminalOptions().begin(); i != catalog->terminalOptions().end(); ++i)
+        createFeatureNodes<TerminalNode, TerminalGroup, TerminalFeatureOptions>(*i, context, options);
 
     OE_NOTICE << LC << "Created " << context.aerodromes.size() << " aerodromes." << std::endl;
 

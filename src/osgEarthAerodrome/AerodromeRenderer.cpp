@@ -37,6 +37,7 @@
 #include <osg/Geometry>
 #include <osg/MatrixTransform>
 #include <osg/Depth>
+#include <osg/Texture2D>
 #include <osgEarth/ECEF>
 #include <osgEarth/ElevationQuery>
 #include <osgEarth/Registry>
@@ -265,7 +266,6 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
     
     node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
-    //node.getOrCreateStateSet()->setRenderBinDetails(9999, "RenderBin");
 
     traverse(node);
 }
@@ -648,9 +648,79 @@ void
 AerodromeRenderer::apply(TerminalNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-    osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::Red, 20.0);
+
+    osg::Node* geom;
+    
+    if (node.getOptions().skinsUrl().isSet())
+    {
+        ResourceLibrary* reslib = new ResourceLibrary( "terminal_resources", node.getOptions().skinsUrl().value() );
+
+        // a style for the building data:
+        Style buildingStyle;
+        buildingStyle.setName( "buildings" );
+
+        // Extrude the shapes into 3D buildings.
+        ExtrusionSymbol* extrusion = buildingStyle.getOrCreate<ExtrusionSymbol>();
+        extrusion->height() = 25.0;
+        extrusion->flatten() = true;
+        extrusion->wallStyleName() = "building-wall";
+        extrusion->roofStyleName() = "building-roof";
+
+        PolygonSymbol* poly = buildingStyle.getOrCreate<PolygonSymbol>();
+        poly->fill()->color() = Color::White;
+
+        // Clamp the buildings to the terrain.
+        AltitudeSymbol* alt = buildingStyle.getOrCreate<AltitudeSymbol>();
+        alt->clamping() = AltitudeSymbol::CLAMP_NONE;
+        alt->verticalOffset() = _elevation;
+
+        // a style for the wall textures:
+        Style wallStyle;
+        wallStyle.setName( "building-wall" );
+        SkinSymbol* wallSkin = wallStyle.getOrCreate<SkinSymbol>();
+        wallSkin->library() = "terminal_resources";
+
+        for (std::vector<std::string>::const_iterator it = node.getOptions().wallTags().begin(); it != node.getOptions().wallTags().end(); ++it)
+            wallSkin->addTag( *it );
+
+        if (wallSkin->tags().size() == 0)
+          wallSkin->addTag("building");
+
+        wallSkin->randomSeed() = 1;
+
+        // a style for the rooftop textures:
+        Style roofStyle;
+        roofStyle.setName( "building-roof" );
+        SkinSymbol* roofSkin = roofStyle.getOrCreate<SkinSymbol>();
+        roofSkin->library() = "terminal_resources";
+
+        for (std::vector<std::string>::const_iterator it = node.getOptions().roofTags().begin(); it != node.getOptions().roofTags().end(); ++it)
+            roofSkin->addTag( *it );
+
+        if (roofSkin->tags().size() == 0)
+          roofSkin->addTag("rooftop");
+
+        roofSkin->randomSeed() = 1;
+        roofSkin->isTiled() = true;
+
+        // assemble a stylesheet and add our styles to it:
+        osg::ref_ptr<StyleSheet> styleSheet = new StyleSheet();
+        styleSheet->addResourceLibrary(reslib);
+        styleSheet->addStyle( wallStyle );
+        styleSheet->addStyle( roofStyle );
+
+        geom = defaultFeatureRenderer(feature.get(), buildingStyle, styleSheet.get());
+    }
+    else
+    {
+        geom = defaultFeatureRenderer(feature.get(), Color::Red, 25.0);
+    }
+
     if (geom)
+    {
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, true) );
         node.addChild(geom);
+    }
 
 }
 
@@ -973,11 +1043,14 @@ AerodromeRenderer::defaultFeatureRenderer(osgEarth::Features::Feature* feature, 
 }
 
 osg::Node*
-AerodromeRenderer::defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Style& style)
+AerodromeRenderer::defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Style& style, StyleSheet* styleSheet)
 {
     if (feature && _map.valid())
     {
         Session* session = new Session( _map.get() );
+        if (styleSheet)
+            session->setStyles(styleSheet);
+
         GeoExtent extent(feature->getSRS(), feature->getGeometry()->getBounds());
         osg::ref_ptr<FeatureProfile> profile = new FeatureProfile( extent );
         FilterContext context(session, profile.get(), extent );

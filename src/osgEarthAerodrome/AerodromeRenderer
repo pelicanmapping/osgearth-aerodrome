@@ -98,8 +98,7 @@ namespace osgEarth { namespace Aerodrome
 
         osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, float height=-1.0f);
         osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Color& color, float height=-1.0f);
-        osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Style& style);
-        
+        osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Style& style, StyleSheet* styleSheet=0L);
 
 
         osg::ref_ptr<Map> _map;

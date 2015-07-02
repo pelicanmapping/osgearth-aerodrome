@@ -84,7 +84,7 @@ namespace osgEarth { namespace Aerodrome
             };
         };
 
-        template <typename T, typename Y> void createFeatureNodes(AerodromeFeatureOptions featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context)=0L);
+        template <typename T, typename Y, typename P> void createFeatureNodes(P featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context)=0L);
         void createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeContext& context, const osgDB::Options* options);
 
         void processStopwayNode(StopwayNode* stopway, AerodromeContext& context);

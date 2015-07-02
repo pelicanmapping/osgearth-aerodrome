@@ -11,22 +11,14 @@
         <terrain min_lod="20" min_normal_map_lod="9"/>
     </options>
     
-    <image name="Flattener" driver="agglite" shared="true" coverage="true" visible="false">
-        <features driver="ogr" url="small_test/APTBoundary_Elev_v3.shp"/>
-        <styles>
-            <style type="text/css">
-                default {
-                    coverage-value: [ELEVATION];
-                }
-            </style>
-        </styles>
-        <cache_policy usage="no_cache"/>        
-        <shared_sampler>flatten_mask</shared_sampler>
-        <shared_matrix>flatten_matrix</shared_matrix>
-    </image>
-    
     <elevation name="readymap_elevation" driver="tms" enabled="true">
         <url>http://readymap.org/readymap/tiles/1.0.0/116/</url>
+    </elevation>
+
+    <elevation name="boundary_elevation" driver="feature_elevation" enabled="true" attr="ELEVATION">
+        <features name="xplane_airport_boundaries" driver="ogr">
+            <url>./small_test/APTBoundary_Elev_v3.shp</url>
+        </features>
     </elevation>
     
     <image name="GLOBCOVER" driver="gdal" shared="true" visible="false" coverage="true" enabled="true">
@@ -61,44 +53,6 @@
             <viewpoint name="sshot" heading="111.0252162283699" height="9.867343158461154" lat="47.52960299910875" long="-122.3012059344189" pitch="-11.95795528996846" range="562.5549797959304"/>
             <sky driver="simple" hours="19.0"/>
         </viewpoints>
-        
-        <terrainshader>
-            <code><![CDATA[
-            
-                #version 330
-                #pragma vp_entryPoint "flattenTerrain"
-                #pragma vp_location   "vertex_model"
-                #pragma vp_order      "1.0"
-                
-                // encodes the upvector and the elevation
-                in vec4 oe_terrain_attr;
-                
-                uniform float     flatten_elevation;
-                uniform sampler2D flatten_mask;
-                uniform mat4      flatten_matrix;
-                varying vec4      oe_layer_tilec;
-                
-                void flattenTerrain(inout vec4 vertex)
-                {
-                    vec4 sample = texture(flatten_mask, (flatten_matrix*oe_layer_tilec).st);
-                    
-                    // decoding information.
-                    const vec4  NO_DATA  = vec4(1,1,1,1);
-                    const float minValue = -8192.0;
-                    const float maxValue =  8192.0;                    
-                    const vec4 decoderRing = vec4(1.00392156, 1.00392156/255.0, 1.00392156/(255.0*255.0), 1.00392156/(255.0*255.0*255.0));
-                    
-                    float hasData = sample == NO_DATA ? 0.0 : 1.0;
-                    
-                    float elevation = dot(sample, decoderRing);
-                    elevation = minValue + elevation*(maxValue-minValue);
-                    
-                    vertex.xyz -= oe_terrain_attr.xyz*oe_terrain_attr.w *hasData;
-                    vertex.z   += elevation *hasData;
-                }
-                
-            ]]></code>
-        </terrainshader>
 
         <sky driver="simple" hours="14.0"/>
             
