@@ -40,6 +40,12 @@ namespace osgEarth { namespace Aerodrome
         StopwayNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature) { }
 
         virtual ~StopwayNode() { }
+
+        void setReferencePoint(const osg::Vec3d& point) { _referencePoint = point; }
+        inline const osg::Vec3d& getReferencePoint() const { return _referencePoint; }
+
+    private:
+        osg::Vec3d _referencePoint;
     };
 
 

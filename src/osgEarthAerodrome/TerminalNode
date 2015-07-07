@@ -23,6 +23,7 @@
 
 #include "Common"
 #include "AerodromeFeatureNode"
+#include "AerodromeFeatureOptions"
 #include <osgEarthFeatures/Feature>
 
 namespace osgEarth { namespace Aerodrome
@@ -37,9 +38,15 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT TerminalNode : public AerodromeFeatureNode
     {
     public:
-        TerminalNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature) { }
+        TerminalNode(const TerminalFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature), _terminalOptions(options) { }
 
         virtual ~TerminalNode() { }
+
+    public:
+        const TerminalFeatureOptions& getOptions() const { return _terminalOptions; }
+
+    protected:
+        TerminalFeatureOptions _terminalOptions;
     };
 
 

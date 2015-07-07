@@ -75,7 +75,6 @@ namespace osgEarth { namespace Aerodrome
     class TextureOptions : public ConfigOptions
     {
     public:
-        /** ICAO code attribute name */
         optional<URI>& url() { return _imageURI; }
         const optional<URI>& url() const { return _imageURI; }    
 
@@ -235,7 +234,7 @@ namespace osgEarth { namespace Aerodrome
     typedef std::list<class AerodromeFeatureOptions> AerodromeOptionsSet;
 
     /**
-     * Options for the Aerodrome features
+     * Options for the Boundary features
      */
     class BoundaryFeatureOptions : public AerodromeFeatureOptions
     {
@@ -279,6 +278,88 @@ namespace osgEarth { namespace Aerodrome
     };
 
     typedef std::list<class BoundaryFeatureOptions> BoundaryOptionsSet;
+
+
+    /**
+     * Options for the Terminal features
+     */
+    class TerminalFeatureOptions : public AerodromeFeatureOptions
+    {
+    public:
+        optional<URI>& skinsUrl() { return _skinsURI; }
+        const optional<URI>& skinsUrl() const { return _skinsURI; }
+
+        const std::vector<std::string>& wallTags() const { return _wallTags; }
+
+        const std::vector<std::string>& roofTags() const { return _roofTags; }
+
+    public:
+        TerminalFeatureOptions( const ConfigOptions& opt =ConfigOptions() ) :
+          AerodromeFeatureOptions( opt )
+        {            
+            fromConfig( _conf );
+        }
+
+        virtual ~TerminalFeatureOptions() { }
+
+    public:
+        Config getConfig() const {
+            Config conf = AerodromeFeatureOptions::getConfig();
+
+            if (_skinsURI.isSet())
+            {
+                Config skinsConf;
+
+                skinsConf.updateIfSet("url", _skinsURI);
+
+                for (std::vector<std::string>::const_iterator it = _wallTags.begin(); it != _wallTags.end(); ++it)
+                    skinsConf.add("wall_tag", (*it));
+
+                for (std::vector<std::string>::const_iterator it = _roofTags.begin(); it != _roofTags.end(); ++it)
+                    skinsConf.add("roof_tag", (*it));
+
+                conf.set("skins", skinsConf);
+            }
+
+            return conf;
+        }
+
+    protected:
+        void mergeConfig( const Config& conf ) {
+            AerodromeFeatureOptions::mergeConfig( conf );
+            fromConfig( conf );
+        }
+
+        void fromConfig( const Config& conf ) {
+            AerodromeFeatureOptions::fromConfig(conf);
+
+            _wallTags.clear();
+            _roofTags.clear();
+            _skinsURI.unset();
+
+            Config skins = conf.child("skins");
+            if (!skins.empty())
+            {
+                skins.getIfSet("url", _skinsURI);
+
+                ConfigSet wallTags = skins.children("wall_tag");
+                for (ConfigSet::const_iterator i = wallTags.begin(); i != wallTags.end(); i++)
+                    _wallTags.push_back((*i).value());
+
+                ConfigSet roofTags = skins.children("roof_tag");
+                for (ConfigSet::const_iterator i = roofTags.begin(); i != roofTags.end(); i++)
+                    _roofTags.push_back((*i).value());
+            }
+        }
+
+    private:
+     
+        optional<URI>           _skinsURI;
+        std::vector<std::string>  _wallTags;
+        std::vector<std::string>  _roofTags;
+    };
+
+    typedef std::list<class TerminalFeatureOptions> TerminalOptionsSet;
 
 } } // namespace osgEarth::Aerodrome
 

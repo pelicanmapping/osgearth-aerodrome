@@ -4,7 +4,7 @@
 
         <boundaries elevation_attr="ELEVATION">
                 <features name="xplane_airport_boundaries" driver="ogr">
-                        <url>./APTBoundary_Elev_v4.shp</url>
+                        <url>./APTBoundary_Elev_v3.shp</url>
                 </features>
         </boundaries>
 
@@ -80,6 +80,10 @@
                 <features name="xplane_stopways" driver="ogr">
                         <url>./z_Stopway.shp</url>
                 </features>
+
+                <texture>
+                        <url>../../data/textures/stopway.jpg</url>
+                </texture>
         </stopways>
 
         <taxiways>
@@ -97,6 +101,12 @@
                 <features name="osm_terminals" driver="ogr">
                         <url>./z_aeroway_terminal.shp</url>
                 </features>
+
+                <skins>
+                        <url>C:/dev/git/osgearth_clean/data/resources/textures_us/catalog.xml</url>
+                        <wall_tag>building</wall_tag>
+                        <roof_tag>rooftop</roof_tag>
+                </skins>
         </terminals>
 
         <windsocks>

@@ -82,7 +82,7 @@ AerodromeCatalog::fromConfig(const Config& conf)
 
     ConfigSet terminals = conf.children("terminals");
     for (ConfigSet::const_iterator i = terminals.begin(); i != terminals.end(); i++)
-        _terminalOptions.push_back(AerodromeFeatureOptions(*i));
+        _terminalOptions.push_back(TerminalFeatureOptions(*i));
 
     ConfigSet windsocks = conf.children("windsocks");
     for (ConfigSet::const_iterator i = windsocks.begin(); i != windsocks.end(); i++)
@@ -125,7 +125,7 @@ AerodromeCatalog::getConfig() const
     for(AerodromeOptionsSet::const_iterator i = _taxiwayOptions.begin(); i != _taxiwayOptions.end(); ++i)
         conf.add("taxiways", i->getConfig());
 
-    for(AerodromeOptionsSet::const_iterator i = _terminalOptions.begin(); i != _terminalOptions.end(); ++i)
+    for(TerminalOptionsSet::const_iterator i = _terminalOptions.begin(); i != _terminalOptions.end(); ++i)
         conf.add("terminals", i->getConfig());
 
     for(AerodromeOptionsSet::const_iterator i = _windsockOptions.begin(); i != _windsockOptions.end(); ++i)
