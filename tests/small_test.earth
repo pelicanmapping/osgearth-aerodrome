@@ -20,6 +20,10 @@
             <url>./small_test/APTBoundary_Elev_v3.shp</url>
         </features>
     </elevation>
+
+    <model name="aerodromes" driver="aerodrome">
+        <url>./small_test/catalog.xml</url>
+    </model>
     
     <image name="GLOBCOVER" driver="gdal" shared="true" visible="false" coverage="true" enabled="true">
         <url>C:/data/ESA/GLOBCOVER_L4_200901_200912_V2.3_tiled.tif</url>

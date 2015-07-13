@@ -103,8 +103,8 @@
                 </features>
 
                 <skins>
-                        <url>C:/dev/git/osgearth_clean/data/resources/textures_us/catalog.xml</url>
-                        <wall_tag>building</wall_tag>
+                        <url>../../data/resources/textures_terminals/catalog.xml</url>
+                        <wall_tag>terminal</wall_tag>
                         <roof_tag>rooftop</roof_tag>
                 </skins>
         </terminals>

@@ -19,6 +19,7 @@
 
 #include "AerodromeFactory"
 #include "Common"
+#include "AerodromeModelGraph"
 #include "AerodromeNode"
 #include "AerodromeCatalog"
 #include "BoundaryNode"
@@ -80,14 +81,14 @@ namespace
 }
 
 
-AerodromeFactory::AerodromeFactory(Map* map)
+AerodromeFactory::AerodromeFactory(const Map* map)
   : _map(map)
 {
     //nop
 }
 
 template <typename T, typename Y, typename P>
-void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context))
+void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeModelGraph* graph, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeModelGraph* graph))
 {
     if (!featureOpts.featureOptions().isSet())
     {
@@ -119,7 +120,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeContext& conte
         std::string icao = f->getString(featureOpts.icaoAttr().value());
         if (!icao.empty())
         {
-            osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
+            osg::ref_ptr<AerodromeNode> an = graph->getOrCreateAerodromeNode(icao);
             if (an.valid())
             {
                 Y* parentGroup = 0L;
@@ -149,7 +150,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeContext& conte
 
                     // if a processor function is passed in, call it
                     if (processor)
-                        (this->*processor)(tNode, context);
+                        (this->*processor)(tNode, graph);
 
                     // add the new node to the parent AerodromeNode
                     parentGroup->addChild(tNode);
@@ -166,7 +167,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeContext& conte
     OE_NOTICE << LC << featureCount << " feature nodes created." << std::endl;
 }
 
-void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeContext& context, const osgDB::Options* options)
+void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeModelGraph* graph, const osgDB::Options* options)
 {
     if (!boundaryOpts.featureOptions().isSet())
     {
@@ -196,7 +197,7 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
         std::string icao = f->getString(boundaryOpts.icaoAttr().value());
         if (!icao.empty())
         {
-            osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
+            osg::ref_ptr<AerodromeNode> an = graph->getOrCreateAerodromeNode(icao);
             if (an.valid())
             {
                 OE_NOTICE << LC << "Adding boundary to aerodrome: " << icao << std::endl;
@@ -219,11 +220,11 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
     OE_NOTICE << LC << featureCount << " boundary nodes created." << std::endl;
 }
 
-void AerodromeFactory::processStopwayNode(StopwayNode* stopway, AerodromeContext& context)
+void AerodromeFactory::processStopwayNode(StopwayNode* stopway, AerodromeModelGraph* graph)
 {
     if (stopway)
     {
-        osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(stopway->icao());
+        osg::ref_ptr<AerodromeNode> an = graph->getOrCreateAerodromeNode(stopway->icao());
         if (an.valid())
         {
             std::string rwyNum = stopway->getFeature()->getString("rwy_num");
@@ -259,45 +260,47 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
 {
     OE_NOTICE << LC << "Creating aerodromes..." << std::endl;
 
-    AerodromeContext context;
+    osg::ref_ptr<AerodromeModelGraph> graph = new AerodromeModelGraph(_map);
 
     for(BoundaryOptionsSet::const_iterator i = catalog->boundaryOptions().begin(); i != catalog->boundaryOptions().end(); ++i)
-        createBoundaryNodes(*i, context, options);
+        createBoundaryNodes(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->pavementOptions().begin(); i != catalog->pavementOptions().end(); ++i)
-        createFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->taxiwayOptions().begin(); i != catalog->taxiwayOptions().end(); ++i)
-        createFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayOptions().begin(); i != catalog->runwayOptions().end(); ++i)
-        createFeatureNodes<RunwayNode, RunwayGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<RunwayNode, RunwayGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayThresholdOptions().begin(); i != catalog->runwayThresholdOptions().end(); ++i)
-        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->stopwayOptions().begin(); i != catalog->stopwayOptions().end(); ++i)
-        createFeatureNodes<StopwayNode, StopwayGroup, AerodromeFeatureOptions>(*i, context, options, &AerodromeFactory::processStopwayNode);
+        createFeatureNodes<StopwayNode, StopwayGroup, AerodromeFeatureOptions>(*i, graph, options, &AerodromeFactory::processStopwayNode);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->linearFeatureOptions().begin(); i != catalog->linearFeatureOptions().end(); ++i)
-        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->startupLocationOptions().begin(); i != catalog->startupLocationOptions().end(); ++i)
-        createFeatureNodes<StartupLocationNode, StartupLocationGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<StartupLocationNode, StartupLocationGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightBeaconOptions().begin(); i != catalog->lightBeaconOptions().end(); ++i)
-        createFeatureNodes<LightBeaconNode, LightBeaconGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<LightBeaconNode, LightBeaconGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightIndicatorOptions().begin(); i != catalog->lightIndicatorOptions().end(); ++i)
-         createFeatureNodes<LightIndicatorNode, LightIndicatorGroup, AerodromeFeatureOptions>(*i, context, options);
+         createFeatureNodes<LightIndicatorNode, LightIndicatorGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->windsockOptions().begin(); i != catalog->windsockOptions().end(); ++i)
-        createFeatureNodes<WindsockNode, WindsockGroup, AerodromeFeatureOptions>(*i, context, options);
+        createFeatureNodes<WindsockNode, WindsockGroup, AerodromeFeatureOptions>(*i, graph, options);
 
     for(TerminalOptionsSet::const_iterator i = catalog->terminalOptions().begin(); i != catalog->terminalOptions().end(); ++i)
-        createFeatureNodes<TerminalNode, TerminalGroup, TerminalFeatureOptions>(*i, context, options);
+        createFeatureNodes<TerminalNode, TerminalGroup, TerminalFeatureOptions>(*i, graph, options);
 
-    OE_NOTICE << LC << "Created " << context.aerodromes.size() << " aerodromes." << std::endl;
+    int count = graph->setupPaging();
 
-    return context.root.release();
+    OE_NOTICE << LC << "Created " << count << " aerodromes." << std::endl;
+
+    return graph.release();
 }

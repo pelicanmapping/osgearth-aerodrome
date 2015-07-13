@@ -22,6 +22,7 @@
 #include <osg/Group>
 
 #include "Common"
+#include "AerodromeModelGraph"
 #include "AerodromeNode"
 #include "AerodromeCatalog"
 #include "AerodromeFeatureOptions"
@@ -41,7 +42,7 @@ namespace osgEarth { namespace Aerodrome
     {
     public:
 
-        AerodromeFactory(Map* map);
+        AerodromeFactory(const Map* map);
 
         virtual ~AerodromeFactory() { }
 
@@ -53,45 +54,12 @@ namespace osgEarth { namespace Aerodrome
 
     protected:
 
-        struct AerodromeContext
-        {
-            osg::ref_ptr<osg::Group> root;
-            AerodromeNodeMap aerodromes;
+        template <typename T, typename Y, typename P> void createFeatureNodes(P featureOpts, AerodromeModelGraph* graph, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeModelGraph* graph)=0L);
+        void createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeModelGraph* graph, const osgDB::Options* options);
 
-            AerodromeContext() { root = new osg::Group(); };
+        void processStopwayNode(StopwayNode* stopway, AerodromeModelGraph* graph);
 
-            AerodromeNode* getOrCreateAerodromeNode(const std::string& icao)
-            {
-                AerodromeNode* an = 0L;
-
-                AerodromeNodeMap::iterator itr = aerodromes.find(icao);
-                if (itr != aerodromes.end())
-                {
-                    an = itr->second.get();
-                }
-                else
-                {
-                    an = new AerodromeNode(icao);
-                    aerodromes[icao] = an;
-
-                    if (root.valid())
-                        root->addChild(an);
-
-                    OE_NOTICE << "[AerodromeFactory] Added new aerodrome: " << icao << std::endl;
-                }
-
-                return an;
-            };
-        };
-
-        template <typename T, typename Y, typename P> void createFeatureNodes(P featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context)=0L);
-        void createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeContext& context, const osgDB::Options* options);
-
-        void processStopwayNode(StopwayNode* stopway, AerodromeContext& context);
-
-/* ********** TEMPORARY ********** */
-        osg::ref_ptr<Map> _map;
-/* ********** TEMPORARY ********** */
+        osg::ref_ptr<const Map> _map;
     };
 
 } } // namespace osgEarth::Aerodrome

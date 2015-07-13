@@ -55,83 +55,83 @@ using namespace osgEarth::Aerodrome;
 #define LC "[AerodromeRenderer] "
 
 
-namespace
-{
-    class BoundingBoxMaskSource : public MaskSource
-    {
-    public:
-        BoundingBoxMaskSource(osgEarth::Bounds bounds, double elevation, Map* map)
-          : MaskSource(), _bounds(bounds), _elevation(elevation), _map(map)
-        {
-        }
+//namespace
+//{
+//    class BoundingBoxMaskSource : public MaskSource
+//    {
+//    public:
+//        BoundingBoxMaskSource(osgEarth::Bounds bounds, double elevation, Map* map)
+//          : MaskSource(), _bounds(bounds), _elevation(elevation), _map(map)
+//        {
+//        }
+//
+//        osg::Vec3dArray* createBoundary(const SpatialReference* srs, ProgressCallback* progress =0L)
+//        {
+//            osg::Vec3dArray* boundary = new osg::Vec3dArray();
+//
+//            if (_map.valid())
+//            {
+//                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMin(), _elevation));
+//                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMin(), _elevation));
+//                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMax(), _elevation));
+//                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMax(), _elevation));
+//            }
+//
+//            return boundary;
+//        }
+//
+//    private:
+//        osgEarth::Bounds _bounds;
+//        double _elevation;
+//        osg::ref_ptr<Map> _map;
+//    };
+//
+//    class FlatFeatureMaskSource : public MaskSource
+//    {
+//    public:
+//        FlatFeatureMaskSource(Feature* feature, double elevation, Map* map)
+//            : MaskSource(), _feature(feature), _elevation(elevation), _map(map)
+//        {
+//        }
+//
+//        osg::Vec3dArray* createBoundary(const SpatialReference* srs, ProgressCallback* progress)
+//        {
+//            if (_feature.valid() && _feature->getGeometry())
+//            {
+//                // Init a filter to tranform feature in desired SRS 
+//                //if (!srs->isEquivalentTo(_feature->getSRS()))
+//                //{
+//                //    FilterContext cx;
+//                //    cx.setProfile( new FeatureProfile(_feature->getExtent()) );
+//
+//                //    TransformFilter xform( srs );
+//                //    FeatureList featureList;
+//                //    featureList.push_back(f);
+//                //    cx = xform.push(featureList, cx);
+//                //}
+//
+//                osg::Vec3dArray* boundary = _feature->getGeometry()->toVec3dArray();
+//                if (boundary && boundary->size() > 0)
+//                {
+//                    for (int i=0; i < boundary->size(); i++)
+//                        (*boundary)[i].z() = _elevation;
+//
+//                    return boundary;
+//                }
+//            }
+//
+//            return 0L;
+//        }
+//
+//    private:
+//        osg::ref_ptr<Feature> _feature;
+//        double _elevation;
+//        osg::ref_ptr<Map> _map;
+//    };
+//}
 
-        osg::Vec3dArray* createBoundary(const SpatialReference* srs, ProgressCallback* progress =0L)
-        {
-            osg::Vec3dArray* boundary = new osg::Vec3dArray();
 
-            if (_map.valid())
-            {
-                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMin(), _elevation));
-                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMin(), _elevation));
-                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMax(), _elevation));
-                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMax(), _elevation));
-            }
-
-            return boundary;
-        }
-
-    private:
-        osgEarth::Bounds _bounds;
-        double _elevation;
-        osg::ref_ptr<Map> _map;
-    };
-
-    class FlatFeatureMaskSource : public MaskSource
-    {
-    public:
-        FlatFeatureMaskSource(Feature* feature, double elevation, Map* map)
-            : MaskSource(), _feature(feature), _elevation(elevation), _map(map)
-        {
-        }
-
-        osg::Vec3dArray* createBoundary(const SpatialReference* srs, ProgressCallback* progress)
-        {
-            if (_feature.valid() && _feature->getGeometry())
-            {
-                // Init a filter to tranform feature in desired SRS 
-                //if (!srs->isEquivalentTo(_feature->getSRS()))
-                //{
-                //    FilterContext cx;
-                //    cx.setProfile( new FeatureProfile(_feature->getExtent()) );
-
-                //    TransformFilter xform( srs );
-                //    FeatureList featureList;
-                //    featureList.push_back(f);
-                //    cx = xform.push(featureList, cx);
-                //}
-
-                osg::Vec3dArray* boundary = _feature->getGeometry()->toVec3dArray();
-                if (boundary && boundary->size() > 0)
-                {
-                    for (int i=0; i < boundary->size(); i++)
-                        (*boundary)[i].z() = _elevation;
-
-                    return boundary;
-                }
-            }
-
-            return 0L;
-        }
-
-    private:
-        osg::ref_ptr<Feature> _feature;
-        double _elevation;
-        osg::ref_ptr<Map> _map;
-    };
-}
-
-
-AerodromeRenderer::AerodromeRenderer(Map* map, const osgDB::Options* options)
+AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* options)
   : _map(map), _dbOptions(options), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
     //nop
@@ -199,9 +199,9 @@ AerodromeRenderer::apply(AerodromeNode& node)
             node.insertChild(0, mt);
         
             // create mask layer based on boundary
-            osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
-            node.setMaskLayer(mask);
-            _map->addTerrainMaskLayer(mask);
+            //osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
+            //node.setMaskLayer(mask);
+            //_map->addTerrainMaskLayer(mask);
         }
     }
     else if (node.bounds().valid())
@@ -255,9 +255,9 @@ AerodromeRenderer::apply(AerodromeNode& node)
         node.insertChild(0, mt);
 
         // create mask layer based on accumulated bounds
-        osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _elevation, _map.get()));
-        node.setMaskLayer(mask);
-        _map->addTerrainMaskLayer(mask);
+        //osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _elevation, _map.get()));
+        //node.setMaskLayer(mask);
+        //map->addTerrainMaskLayer(mask);
     }
     else
     {
@@ -686,7 +686,7 @@ AerodromeRenderer::apply(TerminalNode& node)
         if (wallSkin->tags().size() == 0)
           wallSkin->addTag("building");
 
-        wallSkin->randomSeed() = 1;
+        //wallSkin->randomSeed() = 1;
 
         // a style for the rooftop textures:
         Style roofStyle;
@@ -700,7 +700,7 @@ AerodromeRenderer::apply(TerminalNode& node)
         if (roofSkin->tags().size() == 0)
           roofSkin->addTag("rooftop");
 
-        roofSkin->randomSeed() = 1;
+        //roofSkin->randomSeed() = 1;
         roofSkin->isTiled() = true;
 
         // assemble a stylesheet and add our styles to it:
