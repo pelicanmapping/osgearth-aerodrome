@@ -90,6 +90,9 @@ struct osgEarthAerodromeModelPseudoLoader : public osgDB::ReaderWriter
                 AerodromeNode* node = graph->getAerodromeNode(std::string(icao));
                 if (node)
                 {
+                    if (node->getRendered())
+                        return ReadResult(node, ReadResult::FILE_LOADED_FROM_CACHE);
+
                     Registry::instance()->startActivity(uri);
 
                     // create an AerodromeRenderer (node visitor) to create the geometry
@@ -188,7 +191,7 @@ AerodromeModelGraph::setupPaging()
             std::string uri = s_makeURI( _uid, an->icao() );
 
             //TODO: find better max range and make configurable
-            float maxRange = 100000.0f;
+            float maxRange = 10000.0f;
 
             if (an->getBoundary() && an->getBoundary()->getFeature()->getGeometry())
             {

@@ -300,7 +300,7 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
 
     int count = graph->setupPaging();
 
-    OE_NOTICE << LC << "Created " << count << " aerodromes." << std::endl;
+    OE_WARN << LC << "Created " << count << " aerodromes." << std::endl;
 
     return graph.release();
 }

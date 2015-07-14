@@ -132,14 +132,22 @@ using namespace osgEarth::Aerodrome;
 
 
 AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* options)
-  : _map(map), _dbOptions(options), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+  : _map(map), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
-    //nop
+    _dbOptions = new osgDB::Options( *options );
+    _dbOptions->setObjectCacheHint( osgDB::Options::CACHE_IMAGES );
 }
 
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
+  OE_WARN << LC << "RENDERING " << node.icao() << "..." << std::endl;
+    // don't rerender if unnecessary 
+    if (node.getRendered())
+        return;
+
+    node.setRendered(true);
+
     if (node.getBoundary() && node.getBoundary()->getFeature()->getGeometry())
     {
         osg::ref_ptr<BoundaryNode> boundary = node.getBoundary();
@@ -267,7 +275,11 @@ AerodromeRenderer::apply(AerodromeNode& node)
     
     node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
 
+    OE_WARN << LC << "...TRAVERSING..." << std::endl;
+
     traverse(node);
+
+    OE_WARN << LC << "...FINISHED RENDERING" << std::endl;
 }
 
 void

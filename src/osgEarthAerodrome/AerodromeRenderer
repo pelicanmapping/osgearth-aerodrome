@@ -102,7 +102,7 @@ namespace osgEarth { namespace Aerodrome
 
 
         osg::ref_ptr<const Map> _map;
-        osg::ref_ptr<const osgDB::Options> _dbOptions;
+        osg::ref_ptr<osgDB::Options> _dbOptions;
         double _elevation;
         osg::Matrixd _world2local;
         osg::Matrixd _local2world;
