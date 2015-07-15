@@ -141,7 +141,8 @@ AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* optio
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
-  OE_WARN << LC << "RENDERING " << node.icao() << "..." << std::endl;
+    OE_DEBUG << LC << "Rendering icao: " << node.icao() << "..." << std::endl;
+
     // don't rerender if unnecessary 
     if (node.getRendered())
         return;
@@ -275,11 +276,9 @@ AerodromeRenderer::apply(AerodromeNode& node)
     
     node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
 
-    OE_WARN << LC << "...TRAVERSING..." << std::endl;
-
     traverse(node);
 
-    OE_WARN << LC << "...FINISHED RENDERING" << std::endl;
+    OE_DEBUG << LC << "...finished rendering icao: " << node.icao() << std::endl;
 }
 
 void

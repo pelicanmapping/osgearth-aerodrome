@@ -14,6 +14,7 @@ set(LIB_PUBLIC_HEADERS
     AerodromeFactory
     AerodromeFeatureNode
     AerodromeFeatureOptions
+    AerodromeModelGraph
     AerodromeNode
     AerodromeRenderer
     BoundaryNode
@@ -35,9 +36,9 @@ set(LIB_PUBLIC_HEADERS
 set(LIB_COMMON_FILES
     AerodromeCatalog.cpp
     AerodromeFactory.cpp
+    AerodromeModelGraph.cpp
     AerodromeNode.cpp
     AerodromeRenderer.cpp
-    RunwayNode.cpp
 )
 
 

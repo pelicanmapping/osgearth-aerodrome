@@ -146,7 +146,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeModelGraph* gr
                         an->bounds().expandBy(f->getGeometry()->getBounds());
 
                     // create new node
-                    T* tNode = new T(featureOpts, icao, f);
+                    T* tNode = new T(featureOpts, icao, featureSource, f->getFID());
 
                     // if a processor function is passed in, call it
                     if (processor)
@@ -300,7 +300,7 @@ AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Optio
 
     int count = graph->setupPaging();
 
-    OE_WARN << LC << "Created " << count << " aerodromes." << std::endl;
+    OE_DEBUG << LC << "Created " << count << " aerodromes." << std::endl;
 
     return graph.release();
 }

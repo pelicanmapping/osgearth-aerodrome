@@ -36,6 +36,7 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT AerodromeFeatureNode : public osg::Group
     {
     public:
+        AerodromeFeatureNode(const AerodromeFeatureOptions& options, const std::string& icao, FeatureSource* featureSource, FeatureID fid) : _options(options), _source(featureSource), _icao(icao), _fid(fid) { }
         AerodromeFeatureNode(const AerodromeFeatureOptions& options, const std::string& icao, Feature* feature=0L) : _options(options), _icao(icao), _feature(feature) { }
 
         virtual ~AerodromeFeatureNode() { }
@@ -49,11 +50,22 @@ namespace osgEarth { namespace Aerodrome
         const AerodromeFeatureOptions& getOptions() const { return _options; }
 
         /** The underlying feature. */
-        Feature* getFeature() { return _feature.get(); }
+        Feature* getFeature()
+        { 
+            if (!_feature.valid() && _source.valid())
+            {
+                OE_DEBUG << "Reading feature: " << _fid << " from aerodrome: " << icao() << std::endl;
+                _feature = _source->getFeature(_fid);
+            }
+
+            return _feature.get();
+        }
 
     protected:
 
         std::string _icao;
+        osg::ref_ptr<FeatureSource> _source;
+        FeatureID _fid;
         osg::ref_ptr<Feature> _feature;
         AerodromeFeatureOptions _options;
     };
