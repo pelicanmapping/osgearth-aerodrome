@@ -22,10 +22,10 @@
 #include <osg/Group>
 
 #include "Common"
-#include "AerodromeModelGraph"
 #include "AerodromeNode"
 #include "AerodromeCatalog"
 #include "AerodromeFeatureOptions"
+#include "AerodromeRenderer"
 #include "StopwayNode"
 #include <osgEarth/Map>
 
@@ -38,28 +38,40 @@ namespace osgEarth { namespace Aerodrome
     /**
      * Aerodrome
      */
-    class OSGEARTHAERODROME_EXPORT AerodromeFactory
+    class OSGEARTHAERODROME_EXPORT AerodromeFactory : public osg::Group
     {
     public:
 
-        AerodromeFactory(const Map* map);
+        AerodromeFactory(const Map* map, AerodromeCatalog* catalog, const osgDB::Options* options=0L);
 
-        virtual ~AerodromeFactory() { }
+        virtual ~AerodromeFactory();
 
-        // creates aerodromes from AerodromeCatalog file
-        osg::Group* createAerodromes(const URI& uri, const osgDB::Options* options=0L);
+        const Map* getMap() const { return _map.get(); }
 
-        // creates aerodromes from AerodromeCatalog
-        osg::Group* createAerodromes(AerodromeCatalog* catalog, const osgDB::Options* options=0L);
+        AerodromeRenderer* getRenderer() { return _renderer.get(); }
+        void setRenderer(AerodromeRenderer* renderer) { _renderer = renderer; }
+
+        // creates an AerodromeNode from AerodromeCatalog
+        static AerodromeNode* createAerodrome(AerodromeCatalog* catalog, const std::string& icao, const osgDB::Options* options=0L);
+
+        AerodromeNode* getAerodromeNode(const std::string& icao);
 
     protected:
 
-        template <typename T, typename Y, typename P> void createFeatureNodes(P featureOpts, AerodromeModelGraph* graph, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeModelGraph* graph)=0L);
-        void createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeModelGraph* graph, const osgDB::Options* options);
+        // creates PagedLODs for delayed aerodrome creation from an AerodromeCatalog
+        void seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options* options=0L);
 
-        void processStopwayNode(StopwayNode* stopway, AerodromeModelGraph* graph);
+        template <typename T, typename Y, typename P> static void createFeatureNodes(P featureOpts, AerodromeNode* aerodrome, const osgDB::Options* options, void (*processor)(T* node, AerodromeNode* aerodrome)=0L);
+        static void createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeNode* aerodrome, const osgDB::Options* options);
 
+        static void processStopwayNode(StopwayNode* stopway, AerodromeNode* aerodrome);
+
+
+        UID _uid;
         osg::ref_ptr<const Map> _map;
+        osg::ref_ptr<AerodromeCatalog> _catalog;
+        osg::ref_ptr<osgDB::Options> _dbOptions;
+        osg::ref_ptr<AerodromeRenderer> _renderer;
     };
 
 } } // namespace osgEarth::Aerodrome

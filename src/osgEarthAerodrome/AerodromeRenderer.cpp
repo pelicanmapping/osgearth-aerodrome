@@ -55,82 +55,6 @@ using namespace osgEarth::Aerodrome;
 #define LC "[AerodromeRenderer] "
 
 
-//namespace
-//{
-//    class BoundingBoxMaskSource : public MaskSource
-//    {
-//    public:
-//        BoundingBoxMaskSource(osgEarth::Bounds bounds, double elevation, Map* map)
-//          : MaskSource(), _bounds(bounds), _elevation(elevation), _map(map)
-//        {
-//        }
-//
-//        osg::Vec3dArray* createBoundary(const SpatialReference* srs, ProgressCallback* progress =0L)
-//        {
-//            osg::Vec3dArray* boundary = new osg::Vec3dArray();
-//
-//            if (_map.valid())
-//            {
-//                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMin(), _elevation));
-//                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMin(), _elevation));
-//                boundary->push_back(osg::Vec3d(_bounds.xMax(), _bounds.yMax(), _elevation));
-//                boundary->push_back(osg::Vec3d(_bounds.xMin(), _bounds.yMax(), _elevation));
-//            }
-//
-//            return boundary;
-//        }
-//
-//    private:
-//        osgEarth::Bounds _bounds;
-//        double _elevation;
-//        osg::ref_ptr<Map> _map;
-//    };
-//
-//    class FlatFeatureMaskSource : public MaskSource
-//    {
-//    public:
-//        FlatFeatureMaskSource(Feature* feature, double elevation, Map* map)
-//            : MaskSource(), _feature(feature), _elevation(elevation), _map(map)
-//        {
-//        }
-//
-//        osg::Vec3dArray* createBoundary(const SpatialReference* srs, ProgressCallback* progress)
-//        {
-//            if (_feature.valid() && _feature->getGeometry())
-//            {
-//                // Init a filter to tranform feature in desired SRS 
-//                //if (!srs->isEquivalentTo(_feature->getSRS()))
-//                //{
-//                //    FilterContext cx;
-//                //    cx.setProfile( new FeatureProfile(_feature->getExtent()) );
-//
-//                //    TransformFilter xform( srs );
-//                //    FeatureList featureList;
-//                //    featureList.push_back(f);
-//                //    cx = xform.push(featureList, cx);
-//                //}
-//
-//                osg::Vec3dArray* boundary = _feature->getGeometry()->toVec3dArray();
-//                if (boundary && boundary->size() > 0)
-//                {
-//                    for (int i=0; i < boundary->size(); i++)
-//                        (*boundary)[i].z() = _elevation;
-//
-//                    return boundary;
-//                }
-//            }
-//
-//            return 0L;
-//        }
-//
-//    private:
-//        osg::ref_ptr<Feature> _feature;
-//        double _elevation;
-//        osg::ref_ptr<Map> _map;
-//    };
-//}
-
-
 AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* options)
   : _map(map), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
@@ -141,7 +65,7 @@ AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* optio
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
-    OE_DEBUG << LC << "Rendering icao: " << node.icao() << "..." << std::endl;
+    OE_NOTIFY << LC << "Rendering aerodrome: " << node.icao() << "..." << std::endl;
 
     // don't rerender if unnecessary 
     if (node.getRendered())
@@ -156,129 +80,18 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
         // create localizations for this aerodrome
         createLocalizations(featureGeom->getBounds(), boundary.get());
-
-        // if the boundary has an elevation value then assume flattening, otherwise draw a base poly and add a mask.
-        if (!boundary->hasElevation())
-        {
-            // create ground geometry beneath the aerodrome
-            osg::Geometry* geometry = new osg::Geometry();
-            geometry->setUseVertexBufferObjects( true );
-            //geometry->setUseDisplayList( false );
-
-            std::vector<osg::Vec3d> boundaryPoints;
-        
-            osg::ref_ptr<osg::Vec3dArray> geomPoints = featureGeom->toVec3dArray();
-            if (geomPoints && geomPoints->size() > 0)
-            {
-                for (int i=0; i < geomPoints->size(); i++)
-                    boundaryPoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
-            }
-
-            //osg::Vec3Array* normals = new osg::Vec3Array();
-            osg::Vec3Array* verts = new osg::Vec3Array();
-            transformAndLocalize(boundaryPoints, _map->getSRS(), verts, 0L);
-
-            geometry->setVertexArray( verts );
-
-            osg::Vec4Array* colors = new osg::Vec4Array;
-            colors->push_back(osg::Vec4(0.557f,0.522f,0.459f,1.0f));
-            geometry->setColorArray(colors);
-            geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-            //TODO: texture coords
-            //osg::Vec2Array* tcoords = new osg::Vec2Array();
-            //geometry->setTexCoordArray(0,tcoords);
-
-            geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
-
-            //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
-            geometry->setName(node.icao() + "_TERRAIN");
-
-            osgEarth::Tessellator tess;
-            tess.tessellateGeometry(*geometry);
-
-            osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-            geode->addDrawable(geometry);
-
-            Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
-
-            osg::MatrixTransform* mt = new osg::MatrixTransform();
-            mt->setMatrix(_local2world);
-            mt->addChild(geode);
-            node.insertChild(0, mt);
-        
-            // create mask layer based on boundary
-            //osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new FlatFeatureMaskSource(boundary->getFeature(), _elevation, _map.get()));
-            //node.setMaskLayer(mask);
-            //_map->addTerrainMaskLayer(mask);
-        }
-    }
-    else if (node.bounds().valid())
-    {
-        // create localizations for this aerodrome
-        createLocalizations(node.bounds());
-
-        // create ground geometry beneath the aerodrome
-        osg::Geometry* geometry = new osg::Geometry();
-        geometry->setUseVertexBufferObjects( true );
-        geometry->setUseDisplayList( false );
-
-        std::vector<osg::Vec3d> boundary;
-        boundary.push_back(osg::Vec3d(node.bounds().xMin(), node.bounds().yMin(), _elevation));
-        boundary.push_back(osg::Vec3d(node.bounds().xMax(), node.bounds().yMin(), _elevation));
-        boundary.push_back(osg::Vec3d(node.bounds().xMax(), node.bounds().yMax(), _elevation));
-        boundary.push_back(osg::Vec3d(node.bounds().xMin(), node.bounds().yMax(), _elevation));
-
-        //osg::Vec3Array* normals = new osg::Vec3Array();
-        osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(boundary, _map->getSRS(), verts, 0L);
-
-        geometry->setVertexArray( verts );
-
-        osg::Vec4Array* colors = new osg::Vec4Array;
-        colors->push_back(osg::Vec4(0.557f,0.522f,0.459f,1.0f));
-        geometry->setColorArray(colors);
-        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-        //TODO: texture coords
-        //osg::Vec2Array* tcoords = new osg::Vec2Array(4);
-        //(*tcoords)[3].set(0.0f,0.0f);
-        //(*tcoords)[2].set(1.0f,0.0f);
-        //(*tcoords)[1].set(1.0f,1.0f);
-        //(*tcoords)[0].set(0.0f,1.0f);
-        //geometry->setTexCoordArray(0,tcoords);
-
-        geometry->addPrimitiveSet( new osg::DrawArrays( GL_QUADS, 0, 4 ) );
-
-        //geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, tex, osg::StateAttribute::ON);
-        geometry->setName(node.icao() + "_TERRAIN");
-
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-        geode->addDrawable(geometry);
-
-        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
-
-        osg::MatrixTransform* mt = new osg::MatrixTransform();
-        mt->setMatrix(_local2world);
-        mt->addChild(geode);
-        node.insertChild(0, mt);
-
-        // create mask layer based on accumulated bounds
-        //osgEarth::MaskLayer* mask = new osgEarth::MaskLayer(osgEarth::MaskLayerOptions(), new BoundingBoxMaskSource(node.bounds(), _elevation, _map.get()));
-        //node.setMaskLayer(mask);
-        //map->addTerrainMaskLayer(mask);
     }
     else
     {
-        _elevation = 0.0;
+        // node does not ahve a boundary or geometry so do not render
+        return;
     }
 
-    
     node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
 
     traverse(node);
 
-    OE_DEBUG << LC << "...finished rendering icao: " << node.icao() << std::endl;
+    OE_NOTIFY << LC << "...finished rendering aerodrome: " << node.icao() << std::endl;
 }
 
 void
