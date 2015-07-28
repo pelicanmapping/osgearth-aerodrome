@@ -65,7 +65,7 @@ AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* optio
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
-    OE_NOTIFY << LC << "Rendering aerodrome: " << node.icao() << "..." << std::endl;
+    OE_INFO << LC << "Rendering aerodrome: " << node.icao() << "..." << std::endl;
 
     // don't rerender if unnecessary 
     if (node.getRendered())
@@ -91,7 +91,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
     traverse(node);
 
-    OE_NOTIFY << LC << "...finished rendering aerodrome: " << node.icao() << std::endl;
+    OE_INFO << LC << "...finished rendering aerodrome: " << node.icao() << std::endl;
 }
 
 void

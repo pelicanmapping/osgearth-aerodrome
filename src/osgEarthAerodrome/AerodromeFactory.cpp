@@ -376,12 +376,16 @@ AerodromeNode* AerodromeFactory::getAerodromeNode(const std::string& icao)
     if (!_renderer.valid())
         return 0L;
 
+    _mutex.writeLock();
+
     // create AerodromeNode
     osg::ref_ptr<AerodromeNode> node = createAerodrome(_catalog, icao, _dbOptions);
 
     // render
     if (_renderer.valid())
         node->accept(*_renderer.get());
+
+    _mutex.writeUnlock();
 
     return node.release();
 }

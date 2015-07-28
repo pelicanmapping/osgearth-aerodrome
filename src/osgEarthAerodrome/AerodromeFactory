@@ -72,6 +72,7 @@ namespace osgEarth { namespace Aerodrome
         osg::ref_ptr<AerodromeCatalog> _catalog;
         osg::ref_ptr<osgDB::Options> _dbOptions;
         osg::ref_ptr<AerodromeRenderer> _renderer;
+        mutable Threading::ReadWriteMutex _mutex;
     };
 
 } } // namespace osgEarth::Aerodrome
