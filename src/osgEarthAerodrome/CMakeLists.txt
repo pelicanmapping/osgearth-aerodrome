@@ -37,7 +37,6 @@ set(LIB_COMMON_FILES
     AerodromeFactory.cpp
     AerodromeNode.cpp
     AerodromeRenderer.cpp
-    RunwayNode.cpp
 )
 
 

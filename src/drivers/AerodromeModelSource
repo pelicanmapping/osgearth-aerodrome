@@ -70,7 +70,7 @@ namespace osgEarth { namespace Drivers { namespace Aerodrome
 
         const ModelSourceOptions _options;
         osg::ref_ptr<AerodromeCatalog> _catalog;
-        //osg::ref_ptr<const osgDB::Options> _dbOptions;
+        osg::ref_ptr<const osgDB::Options> _dbOptions;
 
     };
 

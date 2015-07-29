@@ -45,6 +45,8 @@ AerodromeModelSource::initialize(const osgDB::Options* dbOptions)
 {
     ModelSource::initialize( dbOptions );
 
+    _dbOptions = dbOptions;
+
     std::string uri = _options.getConfig().value("url");
     if ( !uri.empty() )
     {
@@ -58,18 +60,11 @@ AerodromeModelSource::initialize(const osgDB::Options* dbOptions)
 }
 
 osg::Node*
-AerodromeModelSource::createNodeImplementation(const Map*            map,
-                                               ProgressCallback*     progress )
+AerodromeModelSource::createNodeImplementation(const Map* map, ProgressCallback* progress )
 {
-    //AerodromeFactory factory(map);
-    //osg::ref_ptr<osg::Node> node = factory.createAerodromes(_catalog.get(), dbOptions);
+    osg::ref_ptr<AerodromeFactory> factory = new AerodromeFactory(map, _catalog, _dbOptions);
 
-    //AerodromeRenderer renderer(map);
-    //node->accept(renderer);
-
-    //return node.release();
-
-    return 0L;
+    return factory.release();
 }
 
 //------------------------------------------------------------------------

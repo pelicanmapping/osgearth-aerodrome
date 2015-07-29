@@ -23,7 +23,6 @@ using namespace osgEarth::Aerodrome;
 
 
 AerodromeNode::AerodromeNode(const std::string& icao)
-  : _icao(icao)
+  : _icao(icao), _rendered(false)
 {
-    _bounds.init();
 }

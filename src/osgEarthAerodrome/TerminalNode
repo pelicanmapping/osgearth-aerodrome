@@ -38,6 +38,7 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT TerminalNode : public AerodromeFeatureNode
     {
     public:
+        TerminalNode(const TerminalFeatureOptions& options, const std::string& icao, FeatureSource* featureSource, FeatureID fid) : AerodromeFeatureNode(options, icao, featureSource, fid), _terminalOptions(options) { }
         TerminalNode(const TerminalFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature), _terminalOptions(options) { }
 
         virtual ~TerminalNode() { }

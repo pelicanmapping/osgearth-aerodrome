@@ -33,9 +33,16 @@
 #include "TaxiwayNode"
 #include "TerminalNode"
 #include "WindsockNode"
+#include "AerodromeRenderer"
 
 #include <osgEarthFeatures/Feature>
 #include <osgEarthFeatures/FeatureSource>
+
+#include <osgEarth/Registry>
+
+#include <osg/PagedLOD>
+#include <osgDB/FileNameUtils>
+#include <osgDB/Registry>
 
 
 using namespace osgEarth;
@@ -80,31 +87,152 @@ namespace
 }
 
 
-AerodromeFactory::AerodromeFactory(Map* map)
-  : _map(map)
+// -----------------------------------------------------------------------------
+// pseudo-loader for paging in aerodromes.
+
+namespace
 {
-    //nop
+    UID                               _uid         = 0;
+    Threading::ReadWriteMutex         _amfMutex;
+    typedef std::map<UID, osg::observer_ptr<AerodromeFactory> > AMFRegistry;
+    AMFRegistry _amfRegistry;
+
+    static std::string s_makeURI( UID uid, const std::string& icao ) 
+    {
+        std::stringstream buf;
+        buf << uid << "." << icao << ".osgearth_pseudo_amf";
+        std::string str;
+        str = buf.str();
+        return str;
+    }
+
+    static std::string s_makeQuery(const std::string& field, const std::string& icao ) 
+    {
+        std::stringstream buf;
+        buf << field << "='" << icao << "'";
+        std::string str;
+        str = buf.str();
+        return str;
+    }
+}
+
+
+/**
+ * A pseudo-loader for paged feature tiles.
+ */
+struct osgEarthAerodromeModelPseudoLoader : public osgDB::ReaderWriter
+{
+    osgEarthAerodromeModelPseudoLoader()
+    {
+        supportsExtension( "osgearth_pseudo_amf", "Aerodrome model pseudo-loader" );
+    }
+
+    const char* className()
+    { // override
+        return "osgEarth Aerodrome Model Pseudo-Loader";
+    }
+
+    ReadResult readNode(const std::string& uri, const Options* options) const
+    {
+        if ( !acceptsExtension( osgDB::getLowerCaseFileExtension(uri) ) )
+            return ReadResult::FILE_NOT_HANDLED;
+
+        UID uid;
+        char icao[11];
+        sscanf( uri.c_str(), "%u.%10[^'.'].%*s", &uid, icao );
+
+        osg::ref_ptr<AerodromeFactory> factory = getFactory(uid);
+        if ( factory.valid() )
+        {
+            Registry::instance()->startActivity(uri);
+
+            AerodromeNode* node = factory->getAerodromeNode(std::string(icao));
+
+            Registry::instance()->endActivity(uri);
+
+            if (node)
+                return ReadResult(node);
+        }
+
+        return ReadResult::ERROR_IN_READING_FILE;
+    }
+
+    static UID registerFactory( AerodromeFactory* factory )
+    {
+        Threading::ScopedWriteLock lock( _amfMutex );
+        UID key = ++_uid;
+        _amfRegistry[key] = factory;
+        OE_DEBUG << "Registered AMF " << key << std::endl;
+        return key;
+    }
+
+    static void unregisterFactory( UID uid )
+    {
+        Threading::ScopedWriteLock lock( _amfMutex );
+        _amfRegistry.erase( uid );
+        OE_DEBUG << "Unregistered AMF " << uid << std::endl;
+    }
+
+    static AerodromeFactory* getFactory( UID uid ) 
+    {
+        Threading::ScopedReadLock lock( _amfMutex );
+        AMFRegistry::const_iterator i = _amfRegistry.find( uid );
+        return i != _amfRegistry.end() ? i->second.get() : 0L;
+    }
+};
+
+REGISTER_OSGPLUGIN(osgearth_pseudo_amf, osgEarthAerodromeModelPseudoLoader);
+
+
+AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, const osgDB::Options* options)
+  : _map(map), _catalog(catalog)
+{
+    _uid = osgEarthAerodromeModelPseudoLoader::registerFactory( this );
+
+    _dbOptions = new osgDB::Options( *options );
+    //_dbOptions->setObjectCacheHint( osgDB::Options::CACHE_IMAGES );
+
+    // create a default renderer
+    _renderer = new AerodromeRenderer(map,  _dbOptions);
+
+    // setup the PagedLODs
+    seedAerodromes(catalog, _dbOptions);
+}
+
+AerodromeFactory::~AerodromeFactory()
+{
+    osgEarthAerodromeModelPseudoLoader::unregisterFactory( _uid );
 }
 
 template <typename T, typename Y, typename P>
-void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeContext& context, const osgDB::Options* options, void (AerodromeFactory::*processor)(T* node, AerodromeContext& context))
+void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrome, const osgDB::Options* options, void (*processor)(T* node, AerodromeNode* aerodrome))
 {
     if (!featureOpts.featureOptions().isSet())
     {
-        OE_WARN << LC << "Cannot create feature: feature source is not set." << std::endl;
+        OE_WARN << LC << "Cannot create features: feature source is not set." << std::endl;
         return;
     }
 
+    if (!aerodrome)
+    {
+        OE_WARN << LC << "Cannot create features: AerodromeNode is not set." << std::endl;
+        return;
+    }
+
+    Y* parentGroup = new Y();
+    aerodrome->addChild(parentGroup);
+
     osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
     featureSource->initialize(options);
-    
+
     OE_NOTICE << LC << "Reading features...\n";
 
     int featureCount = 0;
 
-    std::map<std::string, Y*> groupNodes;
+    Query query;
+    query.expression() = s_makeQuery(featureOpts.icaoAttr().value(), aerodrome->icao());
 
-    osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor();
+    osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor(query);
     while ( cursor.valid() && cursor->hasMore() )
     {
         Feature* f = cursor->nextFeature();
@@ -116,72 +244,46 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeContext& conte
 
         /* **************************************** */
 
-        std::string icao = f->getString(featureOpts.icaoAttr().value());
-        if (!icao.empty())
-        {
-            osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
-            if (an.valid())
-            {
-                Y* parentGroup = 0L;
+        OE_NOTICE << LC << "Adding feature to aerodrome: " << aerodrome->icao() << std::endl;
 
-                std::map<std::string, Y*>::iterator itr = groupNodes.find(icao);
-                if (itr != groupNodes.end())
-                {
-                    parentGroup = itr->second;
-                }
-                else
-                {
-                    parentGroup = new Y();
-                    groupNodes[icao] = parentGroup;
-                    an->addChild(parentGroup);
-                }
+        // create new node
+        T* tNode = new T(featureOpts, aerodrome->icao(), featureSource, f->getFID());
 
-                if (parentGroup)
-                {
-                    OE_NOTICE << LC << "Adding feature to aerodrome: " << icao << std::endl;
+        // if a processor function is passed in, call it
+        if (processor)
+            (*processor)(tNode, aerodrome);
 
-                    // expand aerodrome bounds
-                    if (f->getGeometry())
-                        an->bounds().expandBy(f->getGeometry()->getBounds());
-
-                    // create new node
-                    T* tNode = new T(featureOpts, icao, f);
-
-                    // if a processor function is passed in, call it
-                    if (processor)
-                        (this->*processor)(tNode, context);
-
-                    // add the new node to the parent AerodromeNode
-                    parentGroup->addChild(tNode);
-                    featureCount++;
-                }
-            }            
-        }
-        else
-        {
-            OE_WARN << LC << "Skipping feature with empty icao code" << std::endl;
-        }
+        // add the new node to the parent AerodromeNode
+        parentGroup->addChild(tNode);
+        featureCount++;
     }
 
-    OE_NOTICE << LC << featureCount << " feature nodes created." << std::endl;
+    OE_NOTICE << LC << "Added " << featureCount << " feature nodes to aerodrome " << aerodrome->icao() << std::endl;
 }
 
-void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeContext& context, const osgDB::Options* options)
+
+
+void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeNode* aerodrome, const osgDB::Options* options)
 {
     if (!boundaryOpts.featureOptions().isSet())
     {
-        OE_WARN << LC << "Cannot create feature: feature source is not set." << std::endl;
+        OE_WARN << LC << "Cannot create boundary features: feature source is not set." << std::endl;
+        return;
+    }
+
+    if (!aerodrome)
+    {
+        OE_WARN << LC << "Cannot create boundary features: AerodromeNode is not set." << std::endl;
         return;
     }
 
     osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(boundaryOpts.featureOptions().value());
     featureSource->initialize(options);
     
-    OE_NOTICE << LC << "Reading features...\n";
+    Query query;
+    query.expression() = s_makeQuery(boundaryOpts.icaoAttr().value(), aerodrome->icao());
 
-    int featureCount = 0;
-
-    osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor();
+    osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor(query);
     while ( cursor.valid() && cursor->hasMore() )
     {
         Feature* f = cursor->nextFeature();
@@ -193,111 +295,159 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
 
         /* **************************************** */
 
-        std::string icao = f->getString(boundaryOpts.icaoAttr().value());
-        if (!icao.empty())
-        {
-            osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(icao);
-            if (an.valid())
-            {
-                OE_NOTICE << LC << "Adding boundary to aerodrome: " << icao << std::endl;
+        OE_NOTICE << LC << "Adding boundary to aerodrome: " << aerodrome->icao() << std::endl;
 
-                // expand aerodrome bounds
-                if (f->getGeometry())
-                    an->bounds().expandBy(f->getGeometry()->getBounds());
-
-                // create new node and add to parent AerodromeNode
-                an->setBoundary(new BoundaryNode(boundaryOpts, icao, f));
-                featureCount++;
-            }            
-        }
-        else
-        {
-            OE_WARN << LC << "Skipping feature with empty icao code" << std::endl;
-        }
+        // create new node and add to parent AerodromeNode
+        aerodrome->setBoundary(new BoundaryNode(boundaryOpts, aerodrome->icao(), f));
+        break;
     }
-
-    OE_NOTICE << LC << featureCount << " boundary nodes created." << std::endl;
 }
 
-void AerodromeFactory::processStopwayNode(StopwayNode* stopway, AerodromeContext& context)
+void AerodromeFactory::processStopwayNode(StopwayNode* stopway, AerodromeNode* aerodrome)
 {
     if (stopway)
     {
-        osg::ref_ptr<AerodromeNode> an = context.getOrCreateAerodromeNode(stopway->icao());
-        if (an.valid())
-        {
-            std::string rwyNum = stopway->getFeature()->getString("rwy_num");
+        std::string rwyNum = stopway->getFeature()->getString("rwy_num");
             
-            FeatureNodeFinder<RunwayNode, RunwayGroup> finder("rwy_num1", rwyNum);
-            an->accept(finder);
+        FeatureNodeFinder<RunwayNode, RunwayGroup> finder("rwy_num1", rwyNum);
+        aerodrome->accept(finder);
 
-            osg::ref_ptr<RunwayNode> runway = finder.foundNode();
-            if (!runway.valid())
-            {
-                FeatureNodeFinder<RunwayNode, RunwayGroup> finder2("rwy_num2", rwyNum);
-                an->accept(finder2);
-                runway = finder2.foundNode();
-            }
-            
-            if (runway.valid())
-                stopway->setReferencePoint(runway->getFeature()->getGeometry()->getBounds().center());
-            else
-                OE_WARN << LC << "Could not find runway " << rwyNum << " for stopway." << std::endl;
+        osg::ref_ptr<RunwayNode> runway = finder.foundNode();
+        if (!runway.valid())
+        {
+            FeatureNodeFinder<RunwayNode, RunwayGroup> finder2("rwy_num2", rwyNum);
+            aerodrome->accept(finder2);
+            runway = finder2.foundNode();
         }
+            
+        if (runway.valid())
+            stopway->setReferencePoint(runway->getFeature()->getGeometry()->getBounds().center());
+        else
+            OE_WARN << LC << "Could not find runway " << rwyNum << " for stopway." << std::endl;
     }
 }
 
-osg::Group*
-AerodromeFactory::createAerodromes(const URI& uri, const osgDB::Options* options)
+AerodromeNode*
+AerodromeFactory::createAerodrome(AerodromeCatalog* catalog, const std::string& icao, const osgDB::Options* options)
 {
-    osg::ref_ptr<AerodromeCatalog> catalog = AerodromeCatalog::read(uri, options);
-    return createAerodromes(catalog, options);
-}
-
-osg::Group*
-AerodromeFactory::createAerodromes(AerodromeCatalog* catalog, const osgDB::Options* options)
-{
-    OE_NOTICE << LC << "Creating aerodromes..." << std::endl;
-
-    AerodromeContext context;
+    osg::ref_ptr<AerodromeNode> aerodrome = new AerodromeNode(icao);
 
     for(BoundaryOptionsSet::const_iterator i = catalog->boundaryOptions().begin(); i != catalog->boundaryOptions().end(); ++i)
-        createBoundaryNodes(*i, context, options);
+        AerodromeFactory::createBoundaryNodes(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->pavementOptions().begin(); i != catalog->pavementOptions().end(); ++i)
-        createFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->taxiwayOptions().begin(); i != catalog->taxiwayOptions().end(); ++i)
-        createFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayOptions().begin(); i != catalog->runwayOptions().end(); ++i)
-        createFeatureNodes<RunwayNode, RunwayGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<RunwayNode, RunwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayThresholdOptions().begin(); i != catalog->runwayThresholdOptions().end(); ++i)
-        createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<RunwayThresholdNode, RunwayThresholdGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->stopwayOptions().begin(); i != catalog->stopwayOptions().end(); ++i)
-        createFeatureNodes<StopwayNode, StopwayGroup, AerodromeFeatureOptions>(*i, context, options, &AerodromeFactory::processStopwayNode);
+        AerodromeFactory::createFeatureNodes<StopwayNode, StopwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options, &AerodromeFactory::processStopwayNode);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->linearFeatureOptions().begin(); i != catalog->linearFeatureOptions().end(); ++i)
-        createFeatureNodes<LinearFeatureNode, LinearFeatureGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<LinearFeatureNode, LinearFeatureGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->startupLocationOptions().begin(); i != catalog->startupLocationOptions().end(); ++i)
-        createFeatureNodes<StartupLocationNode, StartupLocationGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<StartupLocationNode, StartupLocationGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightBeaconOptions().begin(); i != catalog->lightBeaconOptions().end(); ++i)
-        createFeatureNodes<LightBeaconNode, LightBeaconGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<LightBeaconNode, LightBeaconGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightIndicatorOptions().begin(); i != catalog->lightIndicatorOptions().end(); ++i)
-         createFeatureNodes<LightIndicatorNode, LightIndicatorGroup, AerodromeFeatureOptions>(*i, context, options);
+         AerodromeFactory::createFeatureNodes<LightIndicatorNode, LightIndicatorGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->windsockOptions().begin(); i != catalog->windsockOptions().end(); ++i)
-        createFeatureNodes<WindsockNode, WindsockGroup, AerodromeFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<WindsockNode, WindsockGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(TerminalOptionsSet::const_iterator i = catalog->terminalOptions().begin(); i != catalog->terminalOptions().end(); ++i)
-        createFeatureNodes<TerminalNode, TerminalGroup, TerminalFeatureOptions>(*i, context, options);
+        AerodromeFactory::createFeatureNodes<TerminalNode, TerminalGroup, TerminalFeatureOptions>(*i, aerodrome, options);
 
-    OE_NOTICE << LC << "Created " << context.aerodromes.size() << " aerodromes." << std::endl;
+    return aerodrome.release();
+}
 
-    return context.root.release();
+AerodromeNode* AerodromeFactory::getAerodromeNode(const std::string& icao)
+{
+    if (!_renderer.valid())
+        return 0L;
+
+    _mutex.writeLock();
+
+    // create AerodromeNode
+    osg::ref_ptr<AerodromeNode> node = createAerodrome(_catalog, icao, _dbOptions);
+
+    // render
+    if (_renderer.valid())
+        node->accept(*_renderer.get());
+
+    _mutex.writeUnlock();
+
+    return node.release();
+}
+
+void
+AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options* options)
+{
+    removeChildren(0, getNumChildren());
+
+    OE_NOTICE << LC << "Seeding aerodromes from boundaries." << std::endl;
+
+    int aeroCount = 0;
+
+    for(BoundaryOptionsSet::const_iterator i = catalog->boundaryOptions().begin(); i != catalog->boundaryOptions().end(); ++i)
+    {
+        if (!i->featureOptions().isSet())
+        {
+            OE_WARN << LC << "Skipping boundary source: feature source is not set." << std::endl;
+            continue;
+        }
+
+        osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(i->featureOptions().value());
+        featureSource->initialize(options);
+
+        osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor();
+        while ( cursor.valid() && cursor->hasMore() )
+        {
+            Feature* f = cursor->nextFeature();
+
+            std::string icao = f->getString(i->icaoAttr().value());
+            if (!icao.empty())
+            {
+                // create PagedLOD for this aerodrome
+                std::string uri = s_makeURI( _uid, icao );
+
+                //TODO: find better max range and make configurable
+                float maxRange = 10000.0f;
+
+                if (f->getGeometry())
+                {
+                    osg::PagedLOD* p = new osg::PagedLOD();
+                    p->setFileName(0, uri);
+
+                    GeoPoint gp(f->getSRS(), f->getGeometry()->getBounds().center());
+                    osg::Vec3d center;
+                    gp.toWorld(center);
+                    p->setCenter(center);
+
+                    p->setRadius(std::max((float)f->getGeometry()->getBounds().radius(), maxRange));
+                    p->setRange(0, 0.0f, maxRange);
+
+                    addChild(p);
+
+                    aeroCount++;
+                }
+                else
+                {
+                    OE_NOTICE << LC << "Skipping boundary feature: no geometry." << std::endl;
+                }
+            }
+        }
+    }
+
+    OE_NOTICE << LC << aeroCount << " aerodromes found and seeded." << std::endl;
 }

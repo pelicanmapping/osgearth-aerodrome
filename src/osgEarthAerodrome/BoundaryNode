@@ -37,14 +37,15 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT BoundaryNode : public AerodromeFeatureNode
     {
     public:
-        BoundaryNode(const BoundaryFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature), _boundaryOptions(options) { }
+        BoundaryNode(const BoundaryFeatureOptions& options, const std::string& icao, double elevation, const osgEarth::Bounds Bounds, FeatureSource* featureSource, FeatureID fid) : AerodromeFeatureNode(options, icao, featureSource, fid), _elevation(elevation), _hasElevation(true), _boundaryOptions(options) { }
+        BoundaryNode(const BoundaryFeatureOptions& options, const std::string& icao, Feature* feature=0L) : AerodromeFeatureNode(options, icao, feature), _boundaryOptions(options), _hasElevation(false) { }
 
         virtual ~BoundaryNode() { }
         
     public: // properties
         bool hasElevation()
         {
-            if (_boundaryOptions.elevationAttr().isSet() && _feature->hasAttr(_boundaryOptions.elevationAttr().value()))
+            if (_hasElevation || (_boundaryOptions.elevationAttr().isSet() && getFeature()->hasAttr(_boundaryOptions.elevationAttr().value())))
                 return true;
 
             return false;
@@ -52,11 +53,13 @@ namespace osgEarth { namespace Aerodrome
 
         double elevation()
         {
-            return hasElevation() ? _feature->getDouble(_boundaryOptions.elevationAttr().value(), DBL_MIN) : DBL_MIN;
+            return hasElevation() ? _hasElevation ? _elevation : getFeature()->getDouble(_boundaryOptions.elevationAttr().value(), 0.0) : 0.0;
         }
 
     protected:
         BoundaryFeatureOptions _boundaryOptions;
+        double _elevation;
+        bool _hasElevation;
     };
 
     

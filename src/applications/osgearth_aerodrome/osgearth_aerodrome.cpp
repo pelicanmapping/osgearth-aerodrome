@@ -68,21 +68,6 @@ main(int argc, char** argv)
         viewer.getCamera()->setNearFarRatio(0.00002);
         viewer.getCamera()->setSmallFeatureCullingPixelSize(-1.0f);
 
-
-        MapNode* mapNode = MapNode::findMapNode(node);
-        if (mapNode)
-        {
-            // create an AerodromeFactory to build the aerodromes from the catalog
-            osgEarth::Aerodrome::AerodromeFactory factory(mapNode->getMap());
-            osg::Node* aeroRoot = factory.createAerodromes(osgEarth::URI("small_test/catalog.xml"));
-
-            // create an AerodromeRenderer (node visitor) to create the geometry
-            osgEarth::Aerodrome::AerodromeRenderer renderer(mapNode->getMap());
-            aeroRoot->accept(renderer);
-
-            mapNode->getModelLayerGroup()->addChild(aeroRoot);
-        }
-
         viewer.setSceneData( node );
 
         return viewer.run();

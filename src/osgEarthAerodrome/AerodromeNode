@@ -47,18 +47,18 @@ namespace osgEarth { namespace Aerodrome
         void setMaskLayer(osgEarth::MaskLayer* maskLayer) { _maskLayer = maskLayer; }
         osgEarth::MaskLayer* getMaskLayer() { return _maskLayer.get(); }
 
-        const osgEarth::Bounds& bounds() const { return _bounds; }
-        osgEarth::Bounds& bounds() { return _bounds; }
-
         void setBoundary(BoundaryNode* boundary) { _boundary = boundary; }
         BoundaryNode* getBoundary() { return _boundary.get(); }
+
+        void setRendered(bool rendered) { _rendered = rendered; }
+        bool getRendered() const { return _rendered; }
 
     protected:
 
         std::string _icao;
         osg::ref_ptr<osgEarth::MaskLayer> _maskLayer;
-        osgEarth::Bounds _bounds;
         osg::ref_ptr<BoundaryNode> _boundary;
+        bool _rendered;
     };
 
     typedef std::vector< osg::ref_ptr<AerodromeNode> > AerodromeNodeVector;
