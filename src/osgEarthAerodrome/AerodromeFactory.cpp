@@ -247,7 +247,8 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
         OE_NOTICE << LC << "Adding feature to aerodrome: " << aerodrome->icao() << std::endl;
 
         // create new node
-        T* tNode = new T(featureOpts, aerodrome->icao(), featureSource, f->getFID());
+        //T* tNode = new T(featureOpts, aerodrome->icao(), featureSource, f->getFID());
+        T* tNode = new T(featureOpts, aerodrome->icao(), f);
 
         // if a processor function is passed in, call it
         if (processor)
