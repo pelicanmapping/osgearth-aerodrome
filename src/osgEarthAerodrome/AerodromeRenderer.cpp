@@ -59,7 +59,7 @@ AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* optio
   : _map(map), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
     _dbOptions = new osgDB::Options( *options );
-    _dbOptions->setObjectCacheHint( osgDB::Options::CACHE_IMAGES );
+    _dbOptions->setObjectCacheHint( (osgDB::Options::CacheHintOptions)(osgDB::Options::CACHE_IMAGES | osgDB::Options::CACHE_NODES) );
 }
 
 void
@@ -83,7 +83,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
     }
     else
     {
-        // node does not ahve a boundary or geometry so do not render
+        // node does not have a boundary or geometry so do not render
         return;
     }
 
