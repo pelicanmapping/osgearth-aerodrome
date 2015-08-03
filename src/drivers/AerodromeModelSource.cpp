@@ -62,7 +62,8 @@ AerodromeModelSource::initialize(const osgDB::Options* dbOptions)
 osg::Node*
 AerodromeModelSource::createNodeImplementation(const Map* map, ProgressCallback* progress )
 {
-    osg::ref_ptr<AerodromeFactory> factory = new AerodromeFactory(map, _catalog, _dbOptions);
+    float range = _options.getConfig().value("range", 50000.0f);
+    osg::ref_ptr<AerodromeFactory> factory = new AerodromeFactory(map, _catalog, range, _dbOptions);
 
     return factory.release();
 }

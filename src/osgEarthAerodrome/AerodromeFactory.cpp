@@ -185,7 +185,19 @@ REGISTER_OSGPLUGIN(osgearth_pseudo_amf, osgEarthAerodromeModelPseudoLoader);
 
 
 AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, const osgDB::Options* options)
-  : _map(map), _catalog(catalog)
+  : _map(map), _catalog(catalog), _lodRange(50000.0f)
+{
+    init(options);
+}
+
+AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, float lodRange, const osgDB::Options* options)
+  : _map(map), _catalog(catalog), _lodRange(lodRange)
+{
+    init(options);
+}
+
+void
+AerodromeFactory::init(const osgDB::Options* options)
 {
     _uid = osgEarthAerodromeModelPseudoLoader::registerFactory( this );
 
@@ -193,10 +205,10 @@ AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, co
     //_dbOptions->setObjectCacheHint( osgDB::Options::CACHE_IMAGES );
 
     // create a default renderer
-    _renderer = new AerodromeRenderer(map,  _dbOptions);
+    _renderer = new AerodromeRenderer(_map,  _dbOptions);
 
     // setup the PagedLODs
-    seedAerodromes(catalog, _dbOptions);
+    seedAerodromes(_catalog, _dbOptions);
 }
 
 AerodromeFactory::~AerodromeFactory()
@@ -422,9 +434,6 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                 // create PagedLOD for this aerodrome
                 std::string uri = s_makeURI( _uid, icao );
 
-                //TODO: find better max range and make configurable
-                float maxRange = 10000.0f;
-
                 if (f->getGeometry())
                 {
                     osg::PagedLOD* p = new osg::PagedLOD();
@@ -434,9 +443,8 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                     osg::Vec3d center;
                     gp.toWorld(center);
                     p->setCenter(center);
-
-                    p->setRadius(std::max((float)f->getGeometry()->getBounds().radius(), maxRange));
-                    p->setRange(0, 0.0f, maxRange);
+                    p->setRadius(std::max((float)f->getGeometry()->getBounds().radius(), _lodRange));
+                    p->setRange(0, 0.0f, _lodRange);
 
                     addChild(p);
 
