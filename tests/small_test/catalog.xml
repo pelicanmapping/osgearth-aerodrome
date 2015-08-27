@@ -96,6 +96,12 @@
                 </texture>
         </taxiways>
 
+        <taxiway_signs>
+                <features name="xplane_taxiway_signs" driver="ogr">
+                        <url>./z_TaxiwaySign.shp</url>
+                </features>
+        </taxiway_signs>
+
         <!-- the icao_attr property can be used to override the default value "apt_icao" -->
         <terminals icao_attr="icao">
                 <features name="osm_terminals" driver="ogr">

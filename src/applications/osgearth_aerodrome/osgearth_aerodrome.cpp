@@ -32,7 +32,7 @@ using namespace osgEarth::Util;
 int
 usage(const char* name)
 {
-    OE_NOTICE 
+    OE_DEBUG 
         << "\nUsage: " << name << " file.earth" << std::endl
         << MapNodeHelper().usage() << std::endl;
 

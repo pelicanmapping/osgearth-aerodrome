@@ -31,6 +31,7 @@
 #include "StartupLocationNode"
 #include "StopwayNode"
 #include "TaxiwayNode"
+#include "TaxiwaySignNode"
 #include "TerminalNode"
 #include "WindsockNode"
 #include "AerodromeRenderer"
@@ -237,7 +238,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
     osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
     featureSource->initialize(options);
 
-    OE_NOTICE << LC << "Reading features...\n";
+    OE_DEBUG << LC << "Reading features...\n";
 
     int featureCount = 0;
 
@@ -256,7 +257,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
 
         /* **************************************** */
 
-        OE_NOTICE << LC << "Adding feature to aerodrome: " << aerodrome->icao() << std::endl;
+        OE_DEBUG << LC << "Adding feature to aerodrome: " << aerodrome->icao() << std::endl;
 
         // create new node
         //T* tNode = new T(featureOpts, aerodrome->icao(), featureSource, f->getFID());
@@ -271,7 +272,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
         featureCount++;
     }
 
-    OE_NOTICE << LC << "Added " << featureCount << " feature nodes to aerodrome " << aerodrome->icao() << std::endl;
+    OE_DEBUG << LC << "Added " << featureCount << " feature nodes to aerodrome " << aerodrome->icao() << std::endl;
 }
 
 
@@ -308,7 +309,7 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
 
         /* **************************************** */
 
-        OE_NOTICE << LC << "Adding boundary to aerodrome: " << aerodrome->icao() << std::endl;
+        OE_DEBUG << LC << "Adding boundary to aerodrome: " << aerodrome->icao() << std::endl;
 
         // create new node and add to parent AerodromeNode
         aerodrome->setBoundary(new BoundaryNode(boundaryOpts, aerodrome->icao(), f));
@@ -375,6 +376,9 @@ AerodromeFactory::createAerodrome(AerodromeCatalog* catalog, const std::string& 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightIndicatorOptions().begin(); i != catalog->lightIndicatorOptions().end(); ++i)
          AerodromeFactory::createFeatureNodes<LightIndicatorNode, LightIndicatorGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
+    for(AerodromeOptionsSet::const_iterator i = catalog->taxiwaySignOptions().begin(); i != catalog->taxiwaySignOptions().end(); ++i)
+        AerodromeFactory::createFeatureNodes<TaxiwaySignNode, TaxiwaySignGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
+
     for(AerodromeOptionsSet::const_iterator i = catalog->windsockOptions().begin(); i != catalog->windsockOptions().end(); ++i)
         AerodromeFactory::createFeatureNodes<WindsockNode, WindsockGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
@@ -408,7 +412,7 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
 {
     removeChildren(0, getNumChildren());
 
-    OE_NOTICE << LC << "Seeding aerodromes from boundaries." << std::endl;
+    OE_DEBUG << LC << "Seeding aerodromes from boundaries." << std::endl;
 
     int aeroCount = 0;
 
@@ -452,11 +456,11 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                 }
                 else
                 {
-                    OE_NOTICE << LC << "Skipping boundary feature: no geometry." << std::endl;
+                    OE_DEBUG << LC << "Skipping boundary feature: no geometry." << std::endl;
                 }
             }
         }
     }
 
-    OE_NOTICE << LC << aeroCount << " aerodromes found and seeded." << std::endl;
+    OE_DEBUG << LC << aeroCount << " aerodromes found and seeded." << std::endl;
 }

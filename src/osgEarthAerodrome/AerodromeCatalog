@@ -77,6 +77,9 @@ namespace osgEarth { namespace Aerodrome
         AerodromeOptionsSet& taxiwayOptions() { return _taxiwayOptions; }
         const AerodromeOptionsSet& taxiwayOptions() const { return _taxiwayOptions; }
 
+        AerodromeOptionsSet& taxiwaySignOptions() { return _taxiwaySignOptions; }
+        const AerodromeOptionsSet& taxiwaySignOptions() const { return _taxiwaySignOptions; }
+
         TerminalOptionsSet& terminalOptions() { return _terminalOptions; }
         const TerminalOptionsSet& terminalOptions() const { return _terminalOptions; }
 
@@ -109,6 +112,7 @@ namespace osgEarth { namespace Aerodrome
         AerodromeOptionsSet _startupLocationOptions;
         AerodromeOptionsSet _stopwayOptions;
         AerodromeOptionsSet _taxiwayOptions;
+        AerodromeOptionsSet _taxiwaySignOptions;
         TerminalOptionsSet _terminalOptions;
         AerodromeOptionsSet _windsockOptions;
     };
