@@ -56,9 +56,14 @@ using namespace osgEarth::Aerodrome;
 #define LC "[AerodromeRenderer] "
 
 
-AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* options)
-  : _map(map), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+AerodromeRenderer::AerodromeRenderer()
+  : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
+}
+
+void AerodromeRenderer::initialize(const Map* map, const osgDB::Options* options)
+{
+    _map = map;
     _dbOptions = new osgDB::Options( *options );
     _dbOptions->setObjectCacheHint( (osgDB::Options::CacheHintOptions)(osgDB::Options::CACHE_IMAGES | osgDB::Options::CACHE_NODES) );
 }

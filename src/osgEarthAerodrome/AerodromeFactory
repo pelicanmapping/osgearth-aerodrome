@@ -57,6 +57,9 @@ namespace osgEarth { namespace Aerodrome
 
         AerodromeNode* getAerodromeNode(const std::string& icao);
 
+        /** Access a global AerodromeFactory singleton. */
+        static void setDefaultRenderer(AerodromeRenderer* renderer);
+
     protected:
 
         void init(const osgDB::Options* options);
@@ -69,6 +72,8 @@ namespace osgEarth { namespace Aerodrome
 
         static void processStopwayNode(StopwayNode* stopway, AerodromeNode* aerodrome);
 
+
+        static osg::ref_ptr<AerodromeRenderer> s_renderer;
 
         UID _uid;
         osg::ref_ptr<const Map> _map;

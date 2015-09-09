@@ -44,6 +44,8 @@ namespace osgEarth { namespace Aerodrome
 {
     using namespace osgEarth;
 
+    class AerodromeFactory;
+
     /**
      * Aerodrome
      */
@@ -51,7 +53,7 @@ namespace osgEarth { namespace Aerodrome
     {
     public:
 
-        AerodromeRenderer(const Map* map, const osgDB::Options* options=0L);
+        AerodromeRenderer();
 
         virtual void apply(AerodromeNode& node);
         virtual void apply(LightBeaconNode& node);
@@ -83,6 +85,10 @@ namespace osgEarth { namespace Aerodrome
         virtual void apply(osg::Group& node);
 
     protected:
+
+        friend class AerodromeFactory;
+
+        void initialize(const Map* map, const osgDB::Options* options=0L);
 
         void createLocalizations(const osgEarth::Bounds& bounds, BoundaryNode* boundary=0L);
 
