@@ -43,6 +43,7 @@ namespace osgEarth { namespace Aerodrome
     public:
 
         AerodromeFactory(const Map* map, AerodromeCatalog* catalog, const osgDB::Options* options=0L);
+        AerodromeFactory(const Map* map, AerodromeCatalog* catalog, float lodRange, const osgDB::Options* options=0L);
 
         virtual ~AerodromeFactory();
 
@@ -56,7 +57,12 @@ namespace osgEarth { namespace Aerodrome
 
         AerodromeNode* getAerodromeNode(const std::string& icao);
 
+        /** Access a global AerodromeFactory singleton. */
+        static void setDefaultRenderer(AerodromeRenderer* renderer);
+
     protected:
+
+        void init(const osgDB::Options* options);
 
         // creates PagedLODs for delayed aerodrome creation from an AerodromeCatalog
         void seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options* options=0L);
@@ -67,12 +73,15 @@ namespace osgEarth { namespace Aerodrome
         static void processStopwayNode(StopwayNode* stopway, AerodromeNode* aerodrome);
 
 
+        static osg::ref_ptr<AerodromeRenderer> s_renderer;
+
         UID _uid;
         osg::ref_ptr<const Map> _map;
         osg::ref_ptr<AerodromeCatalog> _catalog;
         osg::ref_ptr<osgDB::Options> _dbOptions;
         osg::ref_ptr<AerodromeRenderer> _renderer;
         mutable Threading::ReadWriteMutex _mutex;
+        float _lodRange;
     };
 
 } } // namespace osgEarth::Aerodrome

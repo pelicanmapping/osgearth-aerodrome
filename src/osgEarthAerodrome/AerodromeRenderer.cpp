@@ -30,6 +30,7 @@
 #include "StartupLocationNode"
 #include "StopwayNode"
 #include "TaxiwayNode"
+#include "TaxiwaySignNode"
 #include "TerminalNode"
 #include "WindsockNode"
 
@@ -55,9 +56,14 @@ using namespace osgEarth::Aerodrome;
 #define LC "[AerodromeRenderer] "
 
 
-AerodromeRenderer::AerodromeRenderer(const Map* map, const osgDB::Options* options)
-  : _map(map), osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+AerodromeRenderer::AerodromeRenderer()
+  : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
 {
+}
+
+void AerodromeRenderer::initialize(const Map* map, const osgDB::Options* options)
+{
+    _map = map;
     _dbOptions = new osgDB::Options( *options );
     _dbOptions->setObjectCacheHint( (osgDB::Options::CacheHintOptions)(osgDB::Options::CACHE_IMAGES | osgDB::Options::CACHE_NODES) );
 }
@@ -469,6 +475,22 @@ AerodromeRenderer::apply(TaxiwayNode& node)
 }
 
 void
+AerodromeRenderer::apply(TaxiwaySignNode& node)
+{
+    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+
+    osg::Node* geom;
+
+    if (node.getOptions().modelOptions().size() > 0)
+        geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
+    else
+        geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
+
+    if (geom)
+        node.addChild(geom);
+}
+
+void
 AerodromeRenderer::apply(TerminalNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
@@ -619,6 +641,12 @@ AerodromeRenderer::apply(TaxiwayGroup& group)
 }
 
 void
+AerodromeRenderer::apply(TaxiwaySignGroup& group)
+{
+    traverse(group);
+}
+
+void
 AerodromeRenderer::apply(TerminalGroup& group)
 {
     traverse(group);
@@ -653,6 +681,8 @@ AerodromeRenderer::apply(osg::Group& node)
         apply(static_cast<StopwayNode&>(node));
     else if (dynamic_cast<TaxiwayNode*>(&node))
         apply(static_cast<TaxiwayNode&>(node));
+    else if (dynamic_cast<TaxiwaySignNode*>(&node))
+        apply(static_cast<TaxiwaySignNode&>(node));
     else if (dynamic_cast<TerminalNode*>(&node))
         apply(static_cast<TerminalNode&>(node));
     else if (dynamic_cast<WindsockNode*>(&node))
@@ -675,6 +705,8 @@ AerodromeRenderer::apply(osg::Group& node)
         apply(static_cast<StopwayGroup&>(node));
     else if (dynamic_cast<TaxiwayGroup*>(&node))
         apply(static_cast<TaxiwayGroup&>(node));
+    else if (dynamic_cast<TaxiwaySignGroup*>(&node))
+        apply(static_cast<TaxiwaySignGroup&>(node));
     else if (dynamic_cast<TerminalGroup*>(&node))
         apply(static_cast<TerminalGroup&>(node));
     else if (dynamic_cast<WindsockGroup*>(&node))

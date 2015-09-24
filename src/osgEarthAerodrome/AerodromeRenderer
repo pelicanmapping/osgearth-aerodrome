@@ -36,12 +36,15 @@
 #include "StartupLocationNode"
 #include "StopwayNode"
 #include "TaxiwayNode"
+#include "TaxiwaySignNode"
 #include "TerminalNode"
 #include "WindsockNode"
 
 namespace osgEarth { namespace Aerodrome
 {
     using namespace osgEarth;
+
+    class AerodromeFactory;
 
     /**
      * Aerodrome
@@ -50,7 +53,7 @@ namespace osgEarth { namespace Aerodrome
     {
     public:
 
-        AerodromeRenderer(const Map* map, const osgDB::Options* options=0L);
+        AerodromeRenderer();
 
         virtual void apply(AerodromeNode& node);
         virtual void apply(LightBeaconNode& node);
@@ -62,6 +65,7 @@ namespace osgEarth { namespace Aerodrome
         virtual void apply(StartupLocationNode& node);
         virtual void apply(StopwayNode& node);
         virtual void apply(TaxiwayNode& node);
+        virtual void apply(TaxiwaySignNode& node);
         virtual void apply(TerminalNode& node);
         virtual void apply(WindsockNode& node);
 
@@ -74,12 +78,17 @@ namespace osgEarth { namespace Aerodrome
         virtual void apply(StartupLocationGroup& group);
         virtual void apply(StopwayGroup& group);
         virtual void apply(TaxiwayGroup& group);
+        virtual void apply(TaxiwaySignGroup& group);
         virtual void apply(TerminalGroup& group);
         virtual void apply(WindsockGroup& group);
 
         virtual void apply(osg::Group& node);
 
     protected:
+
+        friend class AerodromeFactory;
+
+        void initialize(const Map* map, const osgDB::Options* options=0L);
 
         void createLocalizations(const osgEarth::Bounds& bounds, BoundaryNode* boundary=0L);
 

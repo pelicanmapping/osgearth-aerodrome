@@ -28,11 +28,26 @@
 
 using namespace osgEarth;
 using namespace osgEarth::Util;
+using namespace osgEarth::Aerodrome;
+
+class RedLineRenderer : public AerodromeRenderer
+{
+public:
+  RedLineRenderer() : AerodromeRenderer() { }
+
+  virtual void apply(LinearFeatureNode& node) //override
+  {
+      osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+      osg::Node* geom = defaultFeatureRenderer(feature.get(), Color(1.0f, 0.0f, 0.0f, 0.8f));
+      if (geom)
+          node.addChild(geom);
+  }
+};
 
 int
 usage(const char* name)
 {
-    OE_NOTICE 
+    OE_DEBUG 
         << "\nUsage: " << name << " file.earth" << std::endl
         << MapNodeHelper().usage() << std::endl;
 
@@ -59,6 +74,9 @@ main(int argc, char** argv)
 
     // install our default manipulator (do this before calling load)
     viewer.setCameraManipulator( new EarthManipulator() );
+
+    // override default renderer
+    osgEarth::Aerodrome::AerodromeFactory::setDefaultRenderer(new RedLineRenderer());
 
     // load an earth file, and support all or our example command-line options
     // and earth file <external> tags    

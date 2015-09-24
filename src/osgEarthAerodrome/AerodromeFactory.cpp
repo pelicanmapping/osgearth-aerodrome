@@ -31,6 +31,7 @@
 #include "StartupLocationNode"
 #include "StopwayNode"
 #include "TaxiwayNode"
+#include "TaxiwaySignNode"
 #include "TerminalNode"
 #include "WindsockNode"
 #include "AerodromeRenderer"
@@ -184,19 +185,34 @@ struct osgEarthAerodromeModelPseudoLoader : public osgDB::ReaderWriter
 REGISTER_OSGPLUGIN(osgearth_pseudo_amf, osgEarthAerodromeModelPseudoLoader);
 
 
+osg::ref_ptr<AerodromeRenderer> AerodromeFactory::s_renderer = 0L;
+
 AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, const osgDB::Options* options)
-  : _map(map), _catalog(catalog)
+  : _map(map), _catalog(catalog), _lodRange(50000.0f)
+{
+    init(options);
+}
+
+AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, float lodRange, const osgDB::Options* options)
+  : _map(map), _catalog(catalog), _lodRange(lodRange)
+{
+    init(options);
+}
+
+void
+AerodromeFactory::init(const osgDB::Options* options)
 {
     _uid = osgEarthAerodromeModelPseudoLoader::registerFactory( this );
 
     _dbOptions = new osgDB::Options( *options );
     //_dbOptions->setObjectCacheHint( osgDB::Options::CACHE_IMAGES );
 
-    // create a default renderer
-    _renderer = new AerodromeRenderer(map,  _dbOptions);
+    // create and initialize a renderer
+    _renderer = s_renderer.valid() ? s_renderer : new AerodromeRenderer();
+    _renderer->initialize(_map, _dbOptions);
 
     // setup the PagedLODs
-    seedAerodromes(catalog, _dbOptions);
+    seedAerodromes(_catalog, _dbOptions);
 }
 
 AerodromeFactory::~AerodromeFactory()
@@ -225,7 +241,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
     osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
     featureSource->initialize(options);
 
-    OE_NOTICE << LC << "Reading features...\n";
+    OE_DEBUG << LC << "Reading features...\n";
 
     int featureCount = 0;
 
@@ -244,7 +260,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
 
         /* **************************************** */
 
-        OE_NOTICE << LC << "Adding feature to aerodrome: " << aerodrome->icao() << std::endl;
+        OE_DEBUG << LC << "Adding feature to aerodrome: " << aerodrome->icao() << std::endl;
 
         // create new node
         //T* tNode = new T(featureOpts, aerodrome->icao(), featureSource, f->getFID());
@@ -259,7 +275,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
         featureCount++;
     }
 
-    OE_NOTICE << LC << "Added " << featureCount << " feature nodes to aerodrome " << aerodrome->icao() << std::endl;
+    OE_DEBUG << LC << "Added " << featureCount << " feature nodes to aerodrome " << aerodrome->icao() << std::endl;
 }
 
 
@@ -296,7 +312,7 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
 
         /* **************************************** */
 
-        OE_NOTICE << LC << "Adding boundary to aerodrome: " << aerodrome->icao() << std::endl;
+        OE_DEBUG << LC << "Adding boundary to aerodrome: " << aerodrome->icao() << std::endl;
 
         // create new node and add to parent AerodromeNode
         aerodrome->setBoundary(new BoundaryNode(boundaryOpts, aerodrome->icao(), f));
@@ -363,6 +379,9 @@ AerodromeFactory::createAerodrome(AerodromeCatalog* catalog, const std::string& 
     for(AerodromeOptionsSet::const_iterator i = catalog->lightIndicatorOptions().begin(); i != catalog->lightIndicatorOptions().end(); ++i)
          AerodromeFactory::createFeatureNodes<LightIndicatorNode, LightIndicatorGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
+    for(AerodromeOptionsSet::const_iterator i = catalog->taxiwaySignOptions().begin(); i != catalog->taxiwaySignOptions().end(); ++i)
+        AerodromeFactory::createFeatureNodes<TaxiwaySignNode, TaxiwaySignGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
+
     for(AerodromeOptionsSet::const_iterator i = catalog->windsockOptions().begin(); i != catalog->windsockOptions().end(); ++i)
         AerodromeFactory::createFeatureNodes<WindsockNode, WindsockGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
@@ -391,12 +410,18 @@ AerodromeNode* AerodromeFactory::getAerodromeNode(const std::string& icao)
     return node.release();
 }
 
+void 
+AerodromeFactory::setDefaultRenderer(AerodromeRenderer* renderer)
+{
+    s_renderer = renderer;
+}
+
 void
 AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options* options)
 {
     removeChildren(0, getNumChildren());
 
-    OE_NOTICE << LC << "Seeding aerodromes from boundaries." << std::endl;
+    OE_DEBUG << LC << "Seeding aerodromes from boundaries." << std::endl;
 
     int aeroCount = 0;
 
@@ -422,9 +447,6 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                 // create PagedLOD for this aerodrome
                 std::string uri = s_makeURI( _uid, icao );
 
-                //TODO: find better max range and make configurable
-                float maxRange = 10000.0f;
-
                 if (f->getGeometry())
                 {
                     osg::PagedLOD* p = new osg::PagedLOD();
@@ -434,9 +456,8 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                     osg::Vec3d center;
                     gp.toWorld(center);
                     p->setCenter(center);
-
-                    p->setRadius(std::max((float)f->getGeometry()->getBounds().radius(), maxRange));
-                    p->setRange(0, 0.0f, maxRange);
+                    p->setRadius(std::max((float)f->getGeometry()->getBounds().radius(), _lodRange));
+                    p->setRange(0, 0.0f, _lodRange);
 
                     addChild(p);
 
@@ -444,11 +465,11 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                 }
                 else
                 {
-                    OE_NOTICE << LC << "Skipping boundary feature: no geometry." << std::endl;
+                    OE_DEBUG << LC << "Skipping boundary feature: no geometry." << std::endl;
                 }
             }
         }
     }
 
-    OE_NOTICE << LC << aeroCount << " aerodromes found and seeded." << std::endl;
+    OE_DEBUG << LC << aeroCount << " aerodromes found and seeded." << std::endl;
 }

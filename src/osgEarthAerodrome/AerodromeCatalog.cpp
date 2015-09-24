@@ -80,6 +80,10 @@ AerodromeCatalog::fromConfig(const Config& conf)
     for (ConfigSet::const_iterator i = taxiways.begin(); i != taxiways.end(); i++)
         _taxiwayOptions.push_back(AerodromeFeatureOptions(*i));
 
+    ConfigSet taxiwaySigns = conf.children("taxiway_signs");
+    for (ConfigSet::const_iterator i = taxiwaySigns.begin(); i != taxiwaySigns.end(); i++)
+        _taxiwaySignOptions.push_back(AerodromeFeatureOptions(*i));
+
     ConfigSet terminals = conf.children("terminals");
     for (ConfigSet::const_iterator i = terminals.begin(); i != terminals.end(); i++)
         _terminalOptions.push_back(TerminalFeatureOptions(*i));
@@ -124,6 +128,9 @@ AerodromeCatalog::getConfig() const
 
     for(AerodromeOptionsSet::const_iterator i = _taxiwayOptions.begin(); i != _taxiwayOptions.end(); ++i)
         conf.add("taxiways", i->getConfig());
+
+    for(AerodromeOptionsSet::const_iterator i = _taxiwaySignOptions.begin(); i != _taxiwaySignOptions.end(); ++i)
+        conf.add("taxiway_signs", i->getConfig());
 
     for(TerminalOptionsSet::const_iterator i = _terminalOptions.begin(); i != _terminalOptions.end(); ++i)
         conf.add("terminals", i->getConfig());
