@@ -93,7 +93,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
         return;
     }
 
-    node.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+    node.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
 
     traverse(node);
 
@@ -113,7 +113,10 @@ AerodromeRenderer::apply(LightBeaconNode& node)
         geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
 
     if (geom)
+    {
+        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
+    }
 }
 
 void
@@ -131,6 +134,7 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
     if (geom)
     {
         Registry::shaderGenerator().run(geom, "osgEarth.AerodromeRenderer");
+        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -141,7 +145,9 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     osg::Node* geom = defaultFeatureRenderer(feature.get(), Color(0.75f, 0.65f, 0.15f, 0.8f));
     if (geom)
+    {
         node.addChild(geom);
+    }
 }
 
 void
@@ -162,6 +168,8 @@ AerodromeRenderer::apply(PavementNode& node)
 
     if (geom.valid())
     {
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_PAVEMENT");
         node.addChild(geom);
     }
@@ -280,6 +288,8 @@ AerodromeRenderer::apply(RunwayNode& node)
 
     if (geom.valid())
     {
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -287,7 +297,7 @@ AerodromeRenderer::apply(RunwayNode& node)
 void
 AerodromeRenderer::apply(RunwayThresholdNode& node)
 {
-    // We don't necessarily want to render statup locations (metadata)
+    // We don't necessarily want to runway thresholds (metadata)
     //osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
     //osg::Node* geom = defaultFeatureRenderer(feature.get(), Color::White);
     //if (geom)
@@ -448,7 +458,11 @@ AerodromeRenderer::apply(StopwayNode& node)
     }
 
     if (geom)
+    {
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
+    }
 }
 
 void
@@ -469,6 +483,8 @@ AerodromeRenderer::apply(TaxiwayNode& node)
 
     if (geom.valid())
     {
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_TAXIWAY");
         node.addChild(geom);
     }
@@ -487,7 +503,10 @@ AerodromeRenderer::apply(TaxiwaySignNode& node)
         geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
 
     if (geom)
+    {
+        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
+    }
 }
 
 void
@@ -564,7 +583,7 @@ AerodromeRenderer::apply(TerminalNode& node)
 
     if (geom)
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 1.0, true) );
+        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 
@@ -583,7 +602,10 @@ AerodromeRenderer::apply(WindsockNode& node)
         geom = defaultFeatureRenderer(feature.get(), Color::Orange);
 
     if (geom)
+    {
+        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
+    }
 }
 
 void
@@ -602,6 +624,8 @@ void
 AerodromeRenderer::apply(LinearFeatureGroup& group)
 {
     traverse(group);
+    group.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+    group.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
 }
 
 void
