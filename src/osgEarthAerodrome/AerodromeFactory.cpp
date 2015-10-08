@@ -453,6 +453,7 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                     p->setFileName(0, uri);
 
                     GeoPoint gp(f->getSRS(), f->getGeometry()->getBounds().center());
+                    gp = gp.transform(_map->getSRS());
                     osg::Vec3d center;
                     gp.toWorld(center);
                     p->setCenter(center);

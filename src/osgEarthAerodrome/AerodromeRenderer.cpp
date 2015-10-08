@@ -55,6 +55,8 @@ using namespace osgEarth::Aerodrome;
 
 #define LC "[AerodromeRenderer] "
 
+#define DEPTH_RANGE_MAX 1.0 //0.9999
+
 
 AerodromeRenderer::AerodromeRenderer()
   : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
@@ -168,7 +170,7 @@ AerodromeRenderer::apply(PavementNode& node)
 
     if (geom.valid())
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
         geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_PAVEMENT");
         node.addChild(geom);
@@ -194,6 +196,9 @@ AerodromeRenderer::apply(RunwayNode& node)
         //osg::Vec3Array* normals = new osg::Vec3Array();
         osg::Vec3Array* verts = new osg::Vec3Array();
         transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+
+        for(int i=0; i<verts->size(); ++i)
+            (*verts)[i].z() = 0.0;
 
         osg::Geometry* geometry = new osg::Geometry();
         geometry->setVertexArray( verts );
@@ -288,7 +293,7 @@ AerodromeRenderer::apply(RunwayNode& node)
 
     if (geom.valid())
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
         geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
@@ -333,6 +338,9 @@ AerodromeRenderer::apply(StopwayNode& node)
         //osg::Vec3Array* normals = new osg::Vec3Array();
         osg::Vec3Array* verts = new osg::Vec3Array();
         transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+
+        for(int i=0; i<verts->size(); ++i)
+            (*verts)[i].z() = 0.0;
 
         osg::Geometry* geometry = new osg::Geometry();
         geometry->setVertexArray( verts );
@@ -459,7 +467,7 @@ AerodromeRenderer::apply(StopwayNode& node)
 
     if (geom)
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
         geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
@@ -483,7 +491,7 @@ AerodromeRenderer::apply(TaxiwayNode& node)
 
     if (geom.valid())
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
         geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_TAXIWAY");
         node.addChild(geom);
@@ -624,7 +632,7 @@ void
 AerodromeRenderer::apply(LinearFeatureGroup& group)
 {
     traverse(group);
-    group.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, 0.9999, false) );
+    group.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
     group.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
 }
 
@@ -790,6 +798,9 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
         osg::Vec3Array* verts = new osg::Vec3Array();
         transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
 
+        for(int i=0; i<verts->size(); ++i)
+            (*verts)[i].z() = 0.0;
+
         osg::Geometry* geometry = new osg::Geometry();
         geometry->setVertexArray( verts );
 
@@ -947,7 +958,8 @@ void
 AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds, BoundaryNode* boundary)
 {
     // use the center of the bounds as an anchor for localization
-    GeoPoint anchor(_map->getSRS(), bounds.center().x(), bounds.center().y());
+    GeoPoint anchor(boundary->getFeature()->getSRS(), bounds.center().x(), bounds.center().y());
+    anchor = anchor.transform(_map->getSRS());
 
     // get a common elevation for the aerodrome
     if (boundary && boundary->hasElevation())
@@ -958,6 +970,7 @@ AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds, BoundaryN
     {
         ElevationQuery eq(_map.get());
         eq.getElevation(anchor, _elevation, 0.005);
+        OE_WARN << LC << "No elevation data in boundary; using an elevation query" << std::endl;
     }
 
     // create a w2l matrix for the aerodrome
@@ -966,7 +979,7 @@ AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds, BoundaryN
     _world2local.invert(_local2world);
 
     // find the local min point (lower-left), used for calculating site-wide texture coords
-    GeoPoint vert(_map->getSRS(), osg::Vec3d(bounds.xMin(), bounds.yMin(), _elevation), osgEarth::ALTMODE_ABSOLUTE);
+    GeoPoint vert(boundary->getFeature()->getSRS(), osg::Vec3d(bounds.xMin(), bounds.yMin(), _elevation), osgEarth::ALTMODE_ABSOLUTE);
 
     osg::Vec3d world;
     vert.toWorld(world);
