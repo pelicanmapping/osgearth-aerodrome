@@ -18,6 +18,7 @@
 */
 
 #include "AerodromeNode"
+#include <osgUtil/CullVisitor>
 
 using namespace osgEarth::Aerodrome;
 
@@ -25,4 +26,30 @@ using namespace osgEarth::Aerodrome;
 AerodromeNode::AerodromeNode(const std::string& icao)
   : _icao(icao), _rendered(false)
 {
+    //nop
+}
+
+void
+AerodromeNode::traverse(osg::NodeVisitor& nv)
+{
+    if ( nv.getVisitorType() == nv.CULL_VISITOR )
+    {
+        osgUtil::CullVisitor* cv = dynamic_cast<osgUtil::CullVisitor*>(&nv);
+
+        osgUtil::RenderBin* bin = cv->getCurrentRenderBin();
+
+        int newBinNumber = 0;
+        if ( bin->getRenderBinList().size() > 0 )
+            newBinNumber = bin->getRenderBinList().rbegin()->first + 1;
+
+        cv->setCurrentRenderBin( bin->find_or_insert(newBinNumber, "TraversalOrderBin") );
+
+        osg::Group::traverse( nv );
+
+        cv->setCurrentRenderBin( bin );
+    }
+    else
+    {
+        osg::Group::traverse( nv );
+    }    
 }

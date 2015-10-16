@@ -116,7 +116,7 @@ AerodromeRenderer::apply(LightBeaconNode& node)
 
     if (geom)
     {
-        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -136,7 +136,7 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
     if (geom)
     {
         Registry::shaderGenerator().run(geom, "osgEarth.AerodromeRenderer");
-        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -171,7 +171,7 @@ AerodromeRenderer::apply(PavementNode& node)
     if (geom.valid())
     {
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
-        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_PAVEMENT");
         node.addChild(geom);
     }
@@ -294,7 +294,7 @@ AerodromeRenderer::apply(RunwayNode& node)
     if (geom.valid())
     {
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
-        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -468,7 +468,7 @@ AerodromeRenderer::apply(StopwayNode& node)
     if (geom)
     {
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
-        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -492,7 +492,7 @@ AerodromeRenderer::apply(TaxiwayNode& node)
     if (geom.valid())
     {
         geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
-        geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_TAXIWAY");
         node.addChild(geom);
     }
@@ -512,7 +512,7 @@ AerodromeRenderer::apply(TaxiwaySignNode& node)
 
     if (geom)
     {
-        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -591,7 +591,7 @@ AerodromeRenderer::apply(TerminalNode& node)
 
     if (geom)
     {
-        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 
@@ -611,7 +611,7 @@ AerodromeRenderer::apply(WindsockNode& node)
 
     if (geom)
     {
-        geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
+        //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -633,7 +633,7 @@ AerodromeRenderer::apply(LinearFeatureGroup& group)
 {
     traverse(group);
     group.getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
-    group.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
+    //group.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
 }
 
 void

@@ -53,6 +53,10 @@ namespace osgEarth { namespace Aerodrome
         void setRendered(bool rendered) { _rendered = rendered; }
         bool getRendered() const { return _rendered; }
 
+    public: // osg::Node
+
+        void traverse(osg::NodeVisitor& nv);
+
     protected:
 
         std::string _icao;
