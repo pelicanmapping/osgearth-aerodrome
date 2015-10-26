@@ -23,6 +23,7 @@
 #include <osgEarthUtil/ExampleResources>
 #include <osgearthAerodrome/AerodromeFactory>
 #include <osgearthAerodrome/AerodromeRenderer>
+#include <osgEarthFeatures/BuildGeometryFilter>
 
 #define LC "[viewer] "
 
@@ -38,9 +39,63 @@ public:
   virtual void apply(LinearFeatureNode& node) //override
   {
       osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
-      osg::Node* geom = defaultFeatureRenderer(feature.get(), Color(1.0f, 0.0f, 0.0f, 0.8f));
-      if (geom)
+
+      osg::ref_ptr<osg::Node> geom;
+
+      osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
+      if (geomPoints.valid() && geomPoints->size() >= 2)
+      {
+          // localize geometry vertices
+          std::vector<osg::Vec3d> featurePoints;
+          for (int i=0; i < geomPoints->size(); i++)
+          {
+              featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+          }
+
+          osg::ref_ptr<osg::Vec3Array> verts = new osg::Vec3Array();
+          transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+
+          osg::ref_ptr< Feature > clone = new Feature(*feature, osg::CopyOp::DEEP_COPY_ALL);
+          clone->getGeometry()->clear();
+
+          for(int i=0; i<verts->size(); ++i)
+          {
+              (*verts)[i].z() = 0.0;
+
+              clone->getGeometry()->push_back((*verts)[i].x(), (*verts)[i].y(), 0.0);
+          }
+
+          // setup the style
+          Style style;
+          style.getOrCreate<LineSymbol>()->stroke()->color() = Color(1.0f, 0.0f, 0.0f, 0.8f);
+          style.getOrCreate<LineSymbol>()->stroke()->width() = 1.0f;
+          style.getOrCreate<LineSymbol>()->stroke()->widthUnits() = Units::METERS;
+
+          style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
+
+          // use the BuildGeometryFilter to render the linear feature
+          BuildGeometryFilter filter( style );
+
+          FeatureList workingSet;
+          workingSet.push_back(clone);
+
+          FilterContext context;
+          osg::Node* filterNode = filter.push( workingSet, context );
+
+          if (filterNode)
+          {
+              osg::MatrixTransform* mt = new osg::MatrixTransform();
+              mt->setMatrix(_local2world);
+              mt->addChild(filterNode);
+
+              geom = mt;
+          }
+      }
+
+      if (geom.valid())
+      {
           node.addChild(geom);
+      }
   }
 };
 
