@@ -131,7 +131,7 @@ main(int argc, char** argv)
     viewer.setCameraManipulator( new EarthManipulator() );
 
     // override default renderer
-    osgEarth::Aerodrome::AerodromeFactory::setDefaultRenderer(new RedLineRenderer());
+    //osgEarth::Aerodrome::AerodromeFactory::setDefaultRenderer(new RedLineRenderer());  // UNCOMMENT THIS LINE TO TEST A CUSTOM RENDERER
 
     // load an earth file, and support all or our example command-line options
     // and earth file <external> tags    

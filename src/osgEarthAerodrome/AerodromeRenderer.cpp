@@ -152,7 +152,7 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
     osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
     if (geomPoints.valid() && geomPoints->size() >= 2)
     {
-        // localize geometry vertices
+        // create a feature with localized geometry
         std::vector<osg::Vec3d> featurePoints;
         for (int i=0; i < geomPoints->size(); i++)
         {
@@ -160,17 +160,15 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
         }
 
         osg::ref_ptr<osg::Vec3Array> verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+        transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
 
-        osg::ref_ptr< Feature > clone = new Feature(*feature, osg::CopyOp::DEEP_COPY_ALL);
-        clone->getGeometry()->clear();
-
+        Geometry* linear = new LineString();
         for(int i=0; i<verts->size(); ++i)
         {
-            (*verts)[i].z() = 0.0;
-
-            clone->getGeometry()->push_back((*verts)[i].x(), (*verts)[i].y(), 0.0);
+             linear->push_back( osg::Vec3d((*verts)[i].x(), (*verts)[i].y(), 0.0) );
         }
+
+        Feature* linearFeature = new Feature(linear, 0L);
 
         // setup the style
         Style style;
@@ -184,7 +182,7 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
         BuildGeometryFilter filter( style );
 
         FeatureList workingSet;
-        workingSet.push_back(clone);
+        workingSet.push_back(linearFeature);
 
         FilterContext context;
         osg::Node* filterNode = filter.push( workingSet, context );
@@ -248,7 +246,7 @@ AerodromeRenderer::apply(RunwayNode& node)
      
         //osg::Vec3Array* normals = new osg::Vec3Array();
         osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+        transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
 
         for(int i=0; i<verts->size(); ++i)
             (*verts)[i].z() = 0.0;
@@ -390,7 +388,7 @@ AerodromeRenderer::apply(StopwayNode& node)
      
         //osg::Vec3Array* normals = new osg::Vec3Array();
         osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+        transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
 
         for(int i=0; i<verts->size(); ++i)
             (*verts)[i].z() = 0.0;
@@ -849,7 +847,7 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
         }
 
         osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+        transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
 
         for(int i=0; i<verts->size(); ++i)
             (*verts)[i].z() = 0.0;
