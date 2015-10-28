@@ -932,6 +932,10 @@ AerodromeRenderer::featureModelRenderer(osgEarth::Features::Feature* feature, co
             std::string url = i->url().isSet() ? i->url().value().full() : "";
             std::string modelUrl = url + (scale != 1.0f ? "." + toString(scale) + ".scale" : "");
             model->url()->setLiteral(modelUrl);
+
+            std::string heading = i->headingAttr().isSet() ? feature->getString(i->headingAttr().value()) : "";
+            if (heading.length() > 0)
+                model->heading() = heading;
         }
     }
 

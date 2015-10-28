@@ -127,9 +127,12 @@ namespace osgEarth { namespace Aerodrome
         optional<FeatureSelectorOptions>& selector() { return _selector; }
         const optional<FeatureSelectorOptions>& selector() const { return _selector; }
 
+        optional<std::string>& headingAttr() { return _headingAttr; }
+        const optional<std::string>& headingAttr() const { return _headingAttr; }
+
     public:
         ModelOptions( const ConfigOptions& opt =ConfigOptions() ) :
-          _scale(1.0f), ConfigOptions( opt )
+          _scale(1.0f), _headingAttr("true_headi", "true_headi"), ConfigOptions( opt )
         {            
             fromConfig( _conf );
         }
@@ -142,6 +145,7 @@ namespace osgEarth { namespace Aerodrome
             conf.updateIfSet( "url", _imageURI );
             conf.updateIfSet( "scale", _scale );
             conf.updateObjIfSet( "selector", _selector );
+            conf.updateIfSet( "heading_attr", _headingAttr );
             return conf;
         }
 
@@ -156,11 +160,13 @@ namespace osgEarth { namespace Aerodrome
             conf.getIfSet( "url", _imageURI );
             conf.getIfSet<float>( "scale", _scale );
             conf.getObjIfSet( "selector", _selector );
+            conf.getIfSet( "heading_attr", _headingAttr );
         }
      
         optional<URI>                    _imageURI;
         optional<float>                  _scale;
         optional<FeatureSelectorOptions> _selector;
+        optional<std::string>            _headingAttr;
     };
 
     typedef std::list<class ModelOptions> ModelOptionsSet;
