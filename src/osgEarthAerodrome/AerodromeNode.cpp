@@ -19,6 +19,7 @@
 
 #include "AerodromeNode"
 #include <osgUtil/CullVisitor>
+#include <osgEarth/Utils>
 
 using namespace osgEarth::Aerodrome;
 
@@ -36,16 +37,33 @@ AerodromeNode::traverse(osg::NodeVisitor& nv)
     {
         osgUtil::CullVisitor* cv = dynamic_cast<osgUtil::CullVisitor*>(&nv);
 
+        // The following is a trick to force the Aerodrome to render in traversal order.
+
+        osg::ref_ptr<osgUtil::RenderBin> newBin;
+
         osgUtil::RenderBin* bin = cv->getCurrentRenderBin();
+        osgUtil::RenderBin* parentBin = bin->getParent();
 
-        int newBinNumber = 0;
-        if ( bin->getRenderBinList().size() > 0 )
-            newBinNumber = bin->getRenderBinList().rbegin()->first + 1;
+        if ( parentBin )
+        {
+            // If a parent bin exists, "allocate" the first unused bin number from its list of children
+            // and use that to force the creation of a new traversal-order bin:
+            int newBinNumber = parentBin->getRenderBinList().rbegin()->first + 1;
+            newBin = parentBin->find_or_insert(newBinNumber, "TraversalOrderBin");
+        }
+        else
+        {
+            // If there is no parent, fall back on the stage and allocate a new child bin there:
+            int newBinNumber = bin->getStage()->getBinNum() + 1;
+            newBin = bin->getStage()->find_or_insert(newBinNumber, "TraversalOrderBin");
+        }
 
-        cv->setCurrentRenderBin( bin->find_or_insert(newBinNumber, "TraversalOrderBin") );
+        // activate our new bin and traverse:
+        cv->setCurrentRenderBin( newBin.get() );
 
-        osg::Group::traverse( nv );
+        osg::Group::traverse(nv);
 
+        // restore the previous bin:
         cv->setCurrentRenderBin( bin );
     }
     else

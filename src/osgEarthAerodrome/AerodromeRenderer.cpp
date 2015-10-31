@@ -96,7 +96,7 @@ AerodromeRenderer::apply(AerodromeNode& node)
         return;
     }
 
-    node.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
+    //node.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
 
     traverse(node);
 
