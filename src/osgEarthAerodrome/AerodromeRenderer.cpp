@@ -136,7 +136,7 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
 
     if (geom)
     {
-        Registry::shaderGenerator().run(geom, "osgEarth.AerodromeRenderer");
+        //Registry::shaderGenerator().run(geom, "osgEarth.AerodromeRenderer");
         //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
@@ -329,7 +329,7 @@ AerodromeRenderer::apply(RunwayNode& node)
         osg::ref_ptr<osg::Geode> geode = new osg::Geode;
         geode->addDrawable(geometry);
 
-        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+        //Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
@@ -503,7 +503,7 @@ AerodromeRenderer::apply(StopwayNode& node)
         osg::ref_ptr<osg::Geode> geode = new osg::Geode;
         geode->addDrawable(geometry);
 
-        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+        //Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
@@ -901,7 +901,7 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
         osg::ref_ptr<osg::Geode> geode = new osg::Geode;
         geode->addDrawable(geometry);
 
-        Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+        //Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
 
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
@@ -1001,7 +1001,11 @@ AerodromeRenderer::defaultFeatureRenderer(osgEarth::Features::Feature* feature, 
         osg::ref_ptr<FeatureProfile> profile = new FeatureProfile( extent );
         FilterContext context(session, profile.get(), extent );
 
-        GeometryCompiler compiler;
+        // disable shader generation so we can do it later, once.
+        GeometryCompilerOptions go;
+        go.shaderPolicy() = osgEarth::SHADERPOLICY_INHERIT;
+
+        GeometryCompiler compiler( go );
         osg::ref_ptr< Feature > clone = new Feature(*feature, osg::CopyOp::DEEP_COPY_ALL);
         return compiler.compile( clone, (clone->style().isSet() ? *clone->style() : style), context );
     }

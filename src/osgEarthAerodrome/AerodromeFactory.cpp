@@ -44,7 +44,7 @@
 #include <osg/PagedLOD>
 #include <osgDB/FileNameUtils>
 #include <osgDB/Registry>
-
+#include <osgUtil/Optimizer>
 
 using namespace osgEarth;
 using namespace osgEarth::Features;
@@ -404,6 +404,10 @@ AerodromeNode* AerodromeFactory::getAerodromeNode(const std::string& icao)
     // render
     if (_renderer.valid())
         node->accept(*_renderer.get());
+
+    // Generate shaders (using a cache)
+    osg::ref_ptr<osgEarth::StateSetCache> cache = new osgEarth::StateSetCache();
+    osgEarth::Registry::shaderGenerator().run( node, "Aerodrome", cache.get() );
 
     _mutex.writeUnlock();
 
