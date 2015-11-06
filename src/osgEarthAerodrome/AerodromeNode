@@ -55,7 +55,7 @@ namespace osgEarth { namespace Aerodrome
 
     public: // osg::Node
 
-        void traverse(osg::NodeVisitor& nv);
+        //void traverse(osg::NodeVisitor& nv);
 
     protected:
 

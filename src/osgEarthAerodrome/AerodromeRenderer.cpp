@@ -56,11 +56,23 @@ using namespace osgEarth::Aerodrome;
 
 #define LC "[AerodromeRenderer] "
 
-#define DEPTH_RANGE_MAX 1.0 //0.9999
+#define DEPTH_RANGE_MAX 1.0
+
+// 
+#define ORDER_PAVEMENT      0
+#define ORDER_TAXIWAY       1
+#define ORDER_RUNWAY        2
+#define ORDER_STOPWAY       3
+#define ORDER_LINEARFEATURE 4
+
+#define SET_ORDER(NODE, NUMBER) \
+    (NODE).getOrCreateStateSet()->setRenderBinDetails( (NUMBER)+_baseRenderBinNum, "RenderBin" )
+
 
 
 AerodromeRenderer::AerodromeRenderer()
-  : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
+  : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
+    _baseRenderBinNum(1)
 {
 }
 
@@ -100,8 +112,6 @@ AerodromeRenderer::apply(AerodromeNode& node)
         return;
     }
 
-    //node.getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
-
     traverse(node);
 
     OE_INFO << LC << "...finished rendering aerodrome: " << node.icao() << std::endl;
@@ -121,7 +131,6 @@ AerodromeRenderer::apply(LightBeaconNode& node)
 
     if (geom)
     {
-        //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -140,8 +149,6 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
 
     if (geom)
     {
-        //Registry::shaderGenerator().run(geom, "osgEarth.AerodromeRenderer");
-        //geom->getOrCreateStateSet()->setRenderBinDetails(1, "RenderBin");
         node.addChild(geom);
     }
 }
@@ -205,6 +212,8 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
     {
         node.addChild(geom);
     }
+
+    SET_ORDER( node, ORDER_LINEARFEATURE );
 }
 
 void
@@ -230,6 +239,8 @@ AerodromeRenderer::apply(PavementNode& node)
         geom->setName(node.icao() + "_PAVEMENT");
         node.addChild(geom);
     }
+
+    SET_ORDER( node, ORDER_PAVEMENT );
 }
 
 void
@@ -352,6 +363,8 @@ AerodromeRenderer::apply(RunwayNode& node)
         //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
+
+    SET_ORDER( node, ORDER_RUNWAY );
 }
 
 void
@@ -526,6 +539,8 @@ AerodromeRenderer::apply(StopwayNode& node)
         //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
+
+    SET_ORDER( node, ORDER_STOPWAY );
 }
 
 void
@@ -551,6 +566,8 @@ AerodromeRenderer::apply(TaxiwayNode& node)
         geom->setName(node.icao() + "_TAXIWAY");
         node.addChild(geom);
     }
+
+    SET_ORDER( node, ORDER_TAXIWAY );
 }
 
 void

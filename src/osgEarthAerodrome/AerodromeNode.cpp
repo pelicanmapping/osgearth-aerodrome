@@ -30,6 +30,7 @@ AerodromeNode::AerodromeNode(const std::string& icao)
     //nop
 }
 
+#if 0
 void
 AerodromeNode::traverse(osg::NodeVisitor& nv)
 {
@@ -71,3 +72,4 @@ AerodromeNode::traverse(osg::NodeVisitor& nv)
         osg::Group::traverse( nv );
     }    
 }
+#endif

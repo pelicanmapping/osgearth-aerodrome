@@ -53,7 +53,11 @@ namespace osgEarth { namespace Aerodrome
     {
     public:
 
+        /** Constructor */
         AerodromeRenderer();
+
+        /** Sets the starting render bin number for ordered drawing */
+        void setBaseRenderBinNum(int base) { _baseRenderBinNum = base; }
 
         virtual void apply(AerodromeNode& node);
         virtual void apply(LightBeaconNode& node);
@@ -117,6 +121,7 @@ namespace osgEarth { namespace Aerodrome
         osg::Matrixd _local2world;
         osg::Vec3d _localMin;
         osg::ref_ptr<Session> _session;
+        int _baseRenderBinNum;
     };
 
 } } // namespace osgEarth::Aerodrome
