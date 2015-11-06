@@ -122,12 +122,12 @@ AerodromeRenderer::apply(LightBeaconNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
 
-    osg::Node* geom;
+    osg::Node* geom = 0L;
 
     if (node.getOptions().modelOptions().size() > 0)
         geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
-    else
-        geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
+    //else
+    //    geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
 
     if (geom)
     {
@@ -140,12 +140,12 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
 
-    osg::Node* geom;
+    osg::Node* geom = 0L;
 
     if (node.getOptions().modelOptions().size() > 0)
         geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
-    else
-        geom = defaultFeatureRenderer(feature.get(), Color::Red);
+    //else
+    //    geom = defaultFeatureRenderer(feature.get(), Color::Red);
 
     if (geom)
     {
@@ -575,12 +575,12 @@ AerodromeRenderer::apply(TaxiwaySignNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
 
-    osg::Node* geom;
+    osg::Node* geom = 0L;
 
     if (node.getOptions().modelOptions().size() > 0)
         geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
-    else
-        geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
+    //else
+    //    geom = defaultFeatureRenderer(feature.get(), Color::Yellow);
 
     if (geom)
     {
@@ -674,12 +674,12 @@ AerodromeRenderer::apply(WindsockNode& node)
 {
     osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
 
-    osg::Node* geom;
+    osg::Node* geom = 0L;
 
     if (node.getOptions().modelOptions().size() > 0)
         geom = featureModelRenderer(feature.get(), node.getOptions().modelOptions());
-    else
-        geom = defaultFeatureRenderer(feature.get(), Color::Orange);
+    //else
+    //    geom = defaultFeatureRenderer(feature.get(), Color::Orange);
 
     if (geom)
     {
