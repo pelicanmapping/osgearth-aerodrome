@@ -116,6 +116,7 @@ namespace osgEarth { namespace Aerodrome
         osg::Matrixd _world2local;
         osg::Matrixd _local2world;
         osg::Vec3d _localMin;
+        osg::ref_ptr<Session> _session;
     };
 
 } } // namespace osgEarth::Aerodrome

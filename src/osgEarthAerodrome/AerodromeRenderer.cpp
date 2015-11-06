@@ -69,6 +69,10 @@ void AerodromeRenderer::initialize(const Map* map, const osgDB::Options* options
     _map = map;
     _dbOptions = new osgDB::Options( *options );
     _dbOptions->setObjectCacheHint( (osgDB::Options::CacheHintOptions)(osgDB::Options::CACHE_IMAGES | osgDB::Options::CACHE_NODES) );
+
+    // Global session with a resource cache
+    _session = new Session(map, 0L, 0L, options );
+    _session->setResourceCache( new ResourceCache(options) );
 }
 
 void
@@ -993,13 +997,13 @@ AerodromeRenderer::defaultFeatureRenderer(osgEarth::Features::Feature* feature, 
 {
     if (feature && _map.valid())
     {
-        Session* session = new Session( _map.get() );
+        //Session* session = new Session( _map.get() );
         if (styleSheet)
-            session->setStyles(styleSheet);
+            _session->setStyles(styleSheet);
 
         GeoExtent extent(feature->getSRS(), feature->getGeometry()->getBounds());
         osg::ref_ptr<FeatureProfile> profile = new FeatureProfile( extent );
-        FilterContext context(session, profile.get(), extent );
+        FilterContext context(_session.get(), profile.get(), extent );
 
         // disable shader generation so we can do it later, once.
         GeometryCompilerOptions go;
