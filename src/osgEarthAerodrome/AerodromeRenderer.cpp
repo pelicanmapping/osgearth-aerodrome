@@ -39,6 +39,7 @@
 #include <osg/MatrixTransform>
 #include <osg/Depth>
 #include <osg/Texture2D>
+#include <osgUtil/Tessellator>
 #include <osgEarth/ECEF>
 #include <osgEarth/ElevationQuery>
 #include <osgEarth/Registry>
@@ -858,78 +859,135 @@ osg::Node*
 AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* feature, const osgEarth::URI& uri, float length)
 {
     osg::ref_ptr<osg::Node> geom;
-    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
-    if (geomPoints.valid() && geomPoints->size() > 2)
+
+    if (feature->getGeometry()->getNumGeometries() > 0)
     {
-        std::vector<osg::Vec3d> featurePoints;
-        for (int i=0; i < geomPoints->size(); i++)
-        {
-            featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
-        }
-
-        osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
-
-        for(int i=0; i<verts->size(); ++i)
-            (*verts)[i].z() = 0.0;
-
-        osg::Geometry* geometry = new osg::Geometry();
-        geometry->setVertexArray( verts );
-
-        osg::Vec3Array* normals = new osg::Vec3Array();
-        normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
-        geometry->setNormalArray( normals );
-        geometry->setNormalBinding( osg::Geometry::BIND_OVERALL );
-
-        osg::Vec4Array* colors = new osg::Vec4Array;
-
-        osg::Image* tex = uri.getImage(_dbOptions);
-        if (tex)
-        {
-            osg::Texture2D* _texture = new osg::Texture2D(tex);     
-            _texture->setWrap(_texture->WRAP_S, _texture->REPEAT);
-            _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
-            _texture->setResizeNonPowerOfTwoHint(false);
-            geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
-
-            osg::Vec2Array* tcoords = new osg::Vec2Array(verts->size());
-
-            for (int i=0; i < verts->size(); i++)
-            {
-                float tcX = ((*verts)[i].x() - _localMin.x()) / length;
-                float tcY = ((*verts)[i].y() - _localMin.y()) / length;
-
-                (*tcoords)[i].set(tcX, tcY);
-            }
-            
-            geometry->setTexCoordArray(0,tcoords);
-        }
-        else
-        {
-            OE_WARN << LC << "Error reading texture file: " << uri.full() << std::endl;
-        }
-
-        colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-
-        geometry->setColorArray(colors);
-        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-        geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
-
-        osgEarth::Tessellator tess;
-        tess.tessellateGeometry(*geometry);
-
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-        geode->addDrawable(geometry);
-
-        //Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
-
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
-        mt->addChild(geode);
-
         geom = mt;
+
+        GeometryIterator gi( feature->getGeometry(), false );
+        while( gi.hasMore() )
+        {
+            Geometry* geometry = gi.next();
+    
+            Polygon* poly = dynamic_cast<Polygon*>(geometry);
+            if ( poly )
+            {
+                poly->rewind(osgEarth::Symbology::Geometry::ORIENTATION_CCW);
+
+                osg::ref_ptr<osg::Vec3dArray> geomPoints = poly->toVec3dArray();
+                if (geomPoints.valid() && geomPoints->size() > 2)
+                {
+                    std::vector<osg::Vec3d> featurePoints;
+                    for (int i=0; i < geomPoints->size(); i++)
+                    {
+                        featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+                    }
+
+                    osg::Vec3Array* verts = new osg::Vec3Array();
+                    transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
+
+                    osg::Geometry* geometry = new osg::Geometry();
+                    geometry->setVertexArray( verts );
+
+                    osg::Vec3Array* normals = new osg::Vec3Array();
+                    normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
+                    geometry->setNormalArray( normals );
+                    geometry->setNormalBinding( osg::Geometry::BIND_OVERALL );
+
+                    geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
+
+
+                    // process holes
+                    for( RingCollection::const_iterator it = poly->getHoles().begin(); it != poly->getHoles().end(); ++it )
+                    {
+                        Ring* hole = it->get();
+
+                        if ( hole )
+                        {
+                            hole->rewind(Geometry::ORIENTATION_CW);
+
+                            osg::ref_ptr<osg::Vec3dArray> holePoints = hole->toVec3dArray();
+                            if (holePoints.valid() && holePoints->size() > 2)
+                            {
+                                std::vector<osg::Vec3d> hPoints;
+                                for (int i=0; i < holePoints->size(); i++)
+                                {
+                                    hPoints.push_back(osg::Vec3d((*holePoints)[i].x(), (*holePoints)[i].y(), _elevation));
+                                }
+
+                                int startIndex = verts->size();
+                                transformAndLocalize(hPoints, feature->getSRS(), verts, 0L);
+
+                                geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, startIndex, verts->size() - startIndex ) );
+                            }
+                        }
+
+                    }
+
+
+                    // flatten local z values to 0.0
+                    for(int i=0; i<verts->size(); ++i)
+                        (*verts)[i].z() = 0.0;
+
+                    
+                    // setup color and texture
+                    osg::Vec4Array* colors = new osg::Vec4Array;
+
+                    osg::Image* tex = uri.getImage(_dbOptions);
+                    if (tex)
+                    {
+                        osg::Texture2D* _texture = new osg::Texture2D(tex);     
+                        _texture->setWrap(_texture->WRAP_S, _texture->REPEAT);
+                        _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
+                        _texture->setResizeNonPowerOfTwoHint(false);
+                        geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
+
+                        osg::Vec2Array* tcoords = new osg::Vec2Array(verts->size());
+
+                        for (int i=0; i < verts->size(); i++)
+                        {
+                            float tcX = ((*verts)[i].x() - _localMin.x()) / length;
+                            float tcY = ((*verts)[i].y() - _localMin.y()) / length;
+
+                            (*tcoords)[i].set(tcX, tcY);
+                        }
+            
+                        geometry->setTexCoordArray(0,tcoords);
+                    }
+                    else
+                    {
+                        OE_WARN << LC << "Error reading texture file: " << uri.full() << std::endl;
+                    }
+
+                    colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
+
+                    geometry->setColorArray(colors);
+                    geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+
+                    // tessellate geom
+                    osgEarth::Tessellator tess;
+                    if (!tess.tessellateGeometry(*geometry))
+                    {
+                        osgUtil::Tessellator tess2;
+                        tess2.setTessellationType( osgUtil::Tessellator::TESS_TYPE_GEOMETRY );
+                        tess2.setWindingType( osgUtil::Tessellator::TESS_WINDING_POSITIVE );
+                        tess2.retessellatePolygons( *geometry );
+                    }
+
+                    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+                    geode->addDrawable(geometry);
+
+                    //Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
+
+                    mt->addChild(geode);
+                }
+            }
+        }
     }
+
 
     return geom.release();
 }
