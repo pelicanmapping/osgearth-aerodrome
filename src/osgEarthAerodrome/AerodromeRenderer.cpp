@@ -41,6 +41,7 @@
 #include <osg/Texture2D>
 #include <osg/PolygonOffset>
 #include <osgUtil/Optimizer>
+#include <osgUtil/Tessellator>
 #include <osgEarth/ECEF>
 #include <osgEarth/ElevationQuery>
 #include <osgEarth/Registry>
@@ -864,45 +865,72 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
     osg::ref_ptr<osg::Geode> geode = new osg::Geode;
 
     osg::ref_ptr<osg::Node> geom;
-    GeometryIterator iter( feature->getGeometry() );
+    GeometryIterator iter( feature->getGeometry(), false );
     while( iter.hasMore() )
     {
-        Geometry* g = iter.next();
-
-        osg::ref_ptr<osg::Vec3dArray> geomPoints = g->toVec3dArray();
-        if (geomPoints.valid() && geomPoints->size() > 2)
+        Geometry* polygon = iter.next();
+        //Polygon* polygon = dynamic_cast<Polygon*>(g);
+        //if ( polygon )
         {
+            osg::Geometry* geometry = new osg::Geometry();
+            
             std::vector<osg::Vec3d> featurePoints;
-            for (int i=0; i < geomPoints->size(); i++)
-            {
-                featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
-            }
+            std::vector<unsigned>   partOffset;
+            unsigned offset = 0;
 
+            GeometryIterator polygonIter( polygon, true );
+            while( polygonIter.hasMore() )
+            {
+                Geometry* part = polygonIter.next();
+
+                osg::ref_ptr<osg::Vec3dArray> partVerts = part->toVec3dArray();
+                if ( partVerts.valid() && partVerts->size() > 2 )
+                {
+                    partOffset.push_back(offset);
+                    offset += partVerts->size();
+
+                    for (int i=0; i < partVerts->size(); i++)
+                    {
+                        featurePoints.push_back(osg::Vec3d((*partVerts)[i].x(), (*partVerts)[i].y(), _elevation));
+                    }
+                }
+            }
+            partOffset.push_back(featurePoints.size());
+
+            // transform all verts into the local coordinate frame:
             osg::Vec3Array* verts = new osg::Vec3Array();
+            geometry->setVertexArray( verts );
             transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
 
+            // re-initialize all Z values to zero:
             for(int i=0; i<verts->size(); ++i)
                 (*verts)[i].z() = 0.0;
 
-            osg::Geometry* geometry = new osg::Geometry();
-            geometry->setVertexArray( verts );
-
+            // set up all the texture coordinates:
             osg::Vec2Array* tcoords = new osg::Vec2Array(verts->size());
-
             for (int i=0; i < verts->size(); i++)
             {
                 float tcX = ((*verts)[i].x() - _localMin.x()) / length;
                 float tcY = ((*verts)[i].y() - _localMin.y()) / length;
 
                 (*tcoords)[i].set(tcX, tcY);
-            }
-            
+            }            
             geometry->setTexCoordArray(0,tcoords);
 
-            geometry->addPrimitiveSet( new osg::DrawArrays( GL_LINE_LOOP, 0, verts->size() ) );
+            for(int i=0; i<partOffset.size()-1; ++i)
+            {
+                geometry->addPrimitiveSet( new osg::DrawArrays(GL_LINE_LOOP, partOffset[i], partOffset[i+1]-partOffset[i]) );
+            }
+            //geometry->addPrimitiveSet( new osg::DrawArrays( GL_LINE_LOOP, 0, verts->size() ) );
 
             osgEarth::Tessellator tess;
-            tess.tessellateGeometry(*geometry);
+            if ( tess.tessellateGeometry(*geometry) == false )
+            {
+                osgUtil::Tessellator tess2;
+                tess2.setTessellationType( osgUtil::Tessellator::TESS_TYPE_GEOMETRY );
+                tess2.setWindingType( osgUtil::Tessellator::TESS_WINDING_POSITIVE );
+                tess2.retessellatePolygons( *geometry );
+            }
 
             geometry->setColorArray(0L);
             geometry->setNormalArray(0L);
