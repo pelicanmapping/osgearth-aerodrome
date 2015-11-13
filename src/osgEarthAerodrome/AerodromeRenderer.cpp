@@ -39,6 +39,8 @@
 #include <osg/MatrixTransform>
 #include <osg/Depth>
 #include <osg/Texture2D>
+#include <osg/PolygonOffset>
+#include <osgUtil/Optimizer>
 #include <osgEarth/ECEF>
 #include <osgEarth/ElevationQuery>
 #include <osgEarth/Registry>
@@ -65,8 +67,11 @@ using namespace osgEarth::Aerodrome;
 #define ORDER_STOPWAY       3
 #define ORDER_LINEARFEATURE 4
 
+
+// macro to set a render order and to force a negative polygon offset on ground-co-planar components.
 #define SET_ORDER(NODE, NUMBER) \
-    (NODE).getOrCreateStateSet()->setRenderBinDetails( (NUMBER)+_baseRenderBinNum, "RenderBin" )
+    (NODE).getOrCreateStateSet()->setRenderBinDetails( (NUMBER)+_baseRenderBinNum, "RenderBin" ); \
+    (NODE).getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(-1,-1), 1)
 
 
 
@@ -156,61 +161,60 @@ AerodromeRenderer::apply(LightIndicatorNode& node)
 void
 AerodromeRenderer::apply(LinearFeatureNode& node)
 {
-    osg::ref_ptr<osgEarth::Features::Feature> feature = node.getFeature();
+    osg::ref_ptr<osgEarth::Features::Feature> feature = osg::clone( node.getFeature(), osg::CopyOp::DEEP_COPY_ALL );
 
     osg::ref_ptr<osg::Node> geom;
 
-    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
-    if (geomPoints.valid() && geomPoints->size() >= 2)
+    GeometryIterator iter( feature->getGeometry() );
+    while( iter.hasMore() )
     {
-        // create a feature with localized geometry
-        std::vector<osg::Vec3d> featurePoints;
-        for (int i=0; i < geomPoints->size(); i++)
+        Geometry* part = iter.next();
+
+        for(unsigned i=0; i<part->size(); ++i)
         {
-            featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+            (*part)[i].z() = _elevation;
         }
 
         osg::ref_ptr<osg::Vec3Array> verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
-
-        Geometry* linear = new LineString();
-        for(int i=0; i<verts->size(); ++i)
-        {
-             linear->push_back( osg::Vec3d((*verts)[i].x(), (*verts)[i].y(), 0.0) );
-        }
-
-        Feature* linearFeature = new Feature(linear, 0L);
-
-        // setup the style
-        Style style;
-        style.getOrCreate<LineSymbol>()->stroke()->color() = Color(0.75f, 0.65f, 0.15f, 0.8f);
-        style.getOrCreate<LineSymbol>()->stroke()->width() = 1.0f;
-        style.getOrCreate<LineSymbol>()->stroke()->widthUnits() = Units::METERS;
-
-        style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
-
-        // use the BuildGeometryFilter to render the linear feature
-        BuildGeometryFilter filter( style );
-
-        FeatureList workingSet;
-        workingSet.push_back(linearFeature);
-
-        FilterContext context;
-        osg::Node* filterNode = filter.push( workingSet, context );
-
-        if (filterNode)
-        {
-            osg::MatrixTransform* mt = new osg::MatrixTransform();
-            mt->setMatrix(_local2world);
-            mt->addChild(filterNode);
-
-            geom = mt;
-        }
+        transformAndLocalize( part->asVector(), feature->getSRS(), verts, 0L );
+        for(int j=0; j<verts->size(); ++j)
+            (*part)[j] = (*verts)[j];
     }
 
-    if (geom.valid())
+    Feature* linearFeature = new Feature(feature->getGeometry(), 0L);
+
+    // setup the style
+    Style style;
+    style.getOrCreate<LineSymbol>()->stroke()->color() = Color(0.75f, 0.65f, 0.15f, 0.8f);
+    style.getOrCreate<LineSymbol>()->stroke()->width() = 1.0f;
+    style.getOrCreate<LineSymbol>()->stroke()->widthUnits() = Units::METERS;
+
+    style.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_NONE;
+
+    // use the BuildGeometryFilter to render the linear feature
+    BuildGeometryFilter filter( style );
+
+    FeatureList workingSet;
+    workingSet.push_back(linearFeature);
+
+    FilterContext context;
+    osg::Node* filterNode = filter.push( workingSet, context );
+
+    if (filterNode)
     {
-        node.addChild(geom);
+        osgUtil::Optimizer optimizer;
+        optimizer.optimize( filterNode, optimizer.MERGE_GEOMETRY );
+
+        osg::MatrixTransform* mt = new osg::MatrixTransform();
+        mt->setMatrix(_local2world);
+        mt->addChild(filterNode);
+
+        geom = mt;
+    }
+
+    if ( geom.valid() )
+    {
+        node.addChild( geom );
     }
 
     SET_ORDER( node, ORDER_LINEARFEATURE );
@@ -857,40 +861,31 @@ osgEarth::Symbology::Geometry* AerodromeRenderer::combineGeometries(T& group)
 osg::Node*
 AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* feature, const osgEarth::URI& uri, float length)
 {
+    osg::ref_ptr<osg::Geode> geode = new osg::Geode;
+
     osg::ref_ptr<osg::Node> geom;
-    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
-    if (geomPoints.valid() && geomPoints->size() > 2)
+    GeometryIterator iter( feature->getGeometry() );
+    while( iter.hasMore() )
     {
-        std::vector<osg::Vec3d> featurePoints;
-        for (int i=0; i < geomPoints->size(); i++)
+        Geometry* g = iter.next();
+
+        osg::ref_ptr<osg::Vec3dArray> geomPoints = g->toVec3dArray();
+        if (geomPoints.valid() && geomPoints->size() > 2)
         {
-            featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
-        }
+            std::vector<osg::Vec3d> featurePoints;
+            for (int i=0; i < geomPoints->size(); i++)
+            {
+                featurePoints.push_back(osg::Vec3d((*geomPoints)[i].x(), (*geomPoints)[i].y(), _elevation));
+            }
 
-        osg::Vec3Array* verts = new osg::Vec3Array();
-        transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
+            osg::Vec3Array* verts = new osg::Vec3Array();
+            transformAndLocalize(featurePoints, feature->getSRS(), verts, 0L);
 
-        for(int i=0; i<verts->size(); ++i)
-            (*verts)[i].z() = 0.0;
+            for(int i=0; i<verts->size(); ++i)
+                (*verts)[i].z() = 0.0;
 
-        osg::Geometry* geometry = new osg::Geometry();
-        geometry->setVertexArray( verts );
-
-        osg::Vec3Array* normals = new osg::Vec3Array();
-        normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
-        geometry->setNormalArray( normals );
-        geometry->setNormalBinding( osg::Geometry::BIND_OVERALL );
-
-        osg::Vec4Array* colors = new osg::Vec4Array;
-
-        osg::Image* tex = uri.getImage(_dbOptions);
-        if (tex)
-        {
-            osg::Texture2D* _texture = new osg::Texture2D(tex);     
-            _texture->setWrap(_texture->WRAP_S, _texture->REPEAT);
-            _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
-            _texture->setResizeNonPowerOfTwoHint(false);
-            geometry->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
+            osg::Geometry* geometry = new osg::Geometry();
+            geometry->setVertexArray( verts );
 
             osg::Vec2Array* tcoords = new osg::Vec2Array(verts->size());
 
@@ -903,27 +898,53 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
             }
             
             geometry->setTexCoordArray(0,tcoords);
+
+            geometry->addPrimitiveSet( new osg::DrawArrays( GL_LINE_LOOP, 0, verts->size() ) );
+
+            osgEarth::Tessellator tess;
+            tess.tessellateGeometry(*geometry);
+
+            geometry->setColorArray(0L);
+            geometry->setNormalArray(0L);
+
+            geode->addDrawable(geometry);
         }
+    }
+
+    if ( geode->getNumDrawables() > 0 )
+    {
+        osgUtil::Optimizer optimizer;
+        optimizer.optimize( geode, optimizer.MERGE_GEOMETRY );
+
+        osg::Vec4Array* colors = new osg::Vec4Array;
+        colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
+        
+        osg::Vec3Array* normals = new osg::Vec3Array();
+        normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
+
+        for(int i=0; i<geode->getNumDrawables(); ++i)
+        {
+            geode->getDrawable(i)->asGeometry()->setNormalArray( normals );
+            geode->getDrawable(i)->asGeometry()->setNormalBinding( osg::Geometry::BIND_OVERALL );
+        
+            geode->getDrawable(i)->asGeometry()->setColorArray(colors);
+            geode->getDrawable(i)->asGeometry()->setColorBinding(osg::Geometry::BIND_OVERALL);
+        }
+
+        osg::Image* tex = uri.getImage(_dbOptions);
+        if (tex)
+        {
+            osg::Texture2D* _texture = new osg::Texture2D(tex);     
+            _texture->setWrap(_texture->WRAP_S, _texture->REPEAT);
+            _texture->setWrap(_texture->WRAP_T, _texture->REPEAT);
+            _texture->setResizeNonPowerOfTwoHint(false);
+            geode->getOrCreateStateSet()->setTextureAttributeAndModes(0, _texture, osg::StateAttribute::ON);
+        }            
         else
         {
             OE_WARN << LC << "Error reading texture file: " << uri.full() << std::endl;
         }
-
-        colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
-
-        geometry->setColorArray(colors);
-        geometry->setColorBinding(osg::Geometry::BIND_OVERALL);
-
-        geometry->addPrimitiveSet( new osg::DrawArrays( GL_POLYGON, 0, verts->size() ) );
-
-        osgEarth::Tessellator tess;
-        tess.tessellateGeometry(*geometry);
-
-        osg::ref_ptr<osg::Geode> geode = new osg::Geode;
-        geode->addDrawable(geometry);
-
-        //Registry::shaderGenerator().run(geode.get(), "osgEarth.AerodromeRenderer");
-
+        
         osg::MatrixTransform* mt = new osg::MatrixTransform();
         mt->setMatrix(_local2world);
         mt->addChild(geode);

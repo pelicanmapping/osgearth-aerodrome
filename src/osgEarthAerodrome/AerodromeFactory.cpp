@@ -49,6 +49,7 @@
 using namespace osgEarth;
 using namespace osgEarth::Features;
 using namespace osgEarth::Aerodrome;
+using namespace osgEarth::Symbology;
 
 #define LC "[AerodromeFactory] "
 
@@ -278,6 +279,79 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
     OE_DEBUG << LC << "Added " << featureCount << " feature nodes to aerodrome " << aerodrome->icao() << std::endl;
 }
 
+template <typename T, typename Y, typename P>
+void AerodromeFactory::createMergedFeatureNodes(P featureOpts, AerodromeNode* aerodrome, const osgDB::Options* options, void (*processor)(T* node, AerodromeNode* aerodrome))
+{
+    if (!featureOpts.featureOptions().isSet())
+    {
+        OE_WARN << LC << "Cannot create features: feature source is not set." << std::endl;
+        return;
+    }
+
+    if (!aerodrome)
+    {
+        OE_WARN << LC << "Cannot create features: AerodromeNode is not set." << std::endl;
+        return;
+    }
+
+    Y* parentGroup = new Y();
+    aerodrome->addChild(parentGroup);
+
+    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
+    featureSource->initialize(options);
+
+    OE_DEBUG << LC << "Reading features...\n";
+
+    int featureCount = 0;
+
+    Query query;
+    query.expression() = s_makeQuery(featureOpts.icaoAttr().value(), aerodrome->icao());
+
+
+    osg::ref_ptr<MultiGeometry> mg = new MultiGeometry();
+    const SpatialReference* srs = 0L;
+
+    osg::ref_ptr<Feature> newFeature = 0L;
+
+    osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor(query);
+    while ( cursor.valid() && cursor->hasMore() )
+    {
+        Feature* f = cursor->nextFeature();
+
+        /* **************************************** */
+        /* Necessary but not sure why               */
+
+        const SpatialReference* ecefSRS = f->getSRS()->getGeographicSRS()->getECEF();
+
+        /* **************************************** */
+
+        OE_DEBUG << LC << "Adding feature to aerodrome: " << aerodrome->icao() << std::endl;
+
+        if ( !newFeature.valid() )
+        {
+            newFeature = new Feature( *f );
+            newFeature->setGeometry( mg.get() );
+        }
+
+        mg->add( f->getGeometry() );
+    }
+
+    if ( newFeature.valid() )
+    {
+        T* tNode = new T(featureOpts, aerodrome->icao(), newFeature.get());
+
+        // if a processor function is passed in, call it
+        if (processor)
+            (*processor)(tNode, aerodrome);
+
+        // add the new node to the parent AerodromeNode
+        parentGroup->addChild(tNode);
+        featureCount++;
+    }
+
+    OE_DEBUG << LC << "Added " << featureCount << " feature nodes to aerodrome " << aerodrome->icao() << std::endl;
+}
+
 
 
 void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, AerodromeNode* aerodrome, const osgDB::Options* options)
@@ -351,13 +425,13 @@ AerodromeFactory::createAerodrome(AerodromeCatalog* catalog, const std::string& 
 
     for(BoundaryOptionsSet::const_iterator i = catalog->boundaryOptions().begin(); i != catalog->boundaryOptions().end(); ++i)
         AerodromeFactory::createBoundaryNodes(*i, aerodrome, options);
-
+    
     for(AerodromeOptionsSet::const_iterator i = catalog->pavementOptions().begin(); i != catalog->pavementOptions().end(); ++i)
-        AerodromeFactory::createFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
+        AerodromeFactory::createMergedFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->taxiwayOptions().begin(); i != catalog->taxiwayOptions().end(); ++i)
-        AerodromeFactory::createFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
-
+        AerodromeFactory::createMergedFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
+    
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayOptions().begin(); i != catalog->runwayOptions().end(); ++i)
         AerodromeFactory::createFeatureNodes<RunwayNode, RunwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
@@ -368,7 +442,7 @@ AerodromeFactory::createAerodrome(AerodromeCatalog* catalog, const std::string& 
         AerodromeFactory::createFeatureNodes<StopwayNode, StopwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options, &AerodromeFactory::processStopwayNode);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->linearFeatureOptions().begin(); i != catalog->linearFeatureOptions().end(); ++i)
-        AerodromeFactory::createFeatureNodes<LinearFeatureNode, LinearFeatureGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
+        AerodromeFactory::createMergedFeatureNodes<LinearFeatureNode, LinearFeatureGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
     for(AerodromeOptionsSet::const_iterator i = catalog->startupLocationOptions().begin(); i != catalog->startupLocationOptions().end(); ++i)
         AerodromeFactory::createFeatureNodes<StartupLocationNode, StartupLocationGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
