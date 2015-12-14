@@ -42,7 +42,7 @@ public:
 
       osg::ref_ptr<osg::Node> geom;
 
-      osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
+      osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->createVec3dArray();
       if (geomPoints.valid() && geomPoints->size() >= 2)
       {
           // localize geometry vertices

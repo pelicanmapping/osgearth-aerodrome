@@ -40,6 +40,7 @@
 #include <osg/Depth>
 #include <osg/Texture2D>
 #include <osg/PolygonOffset>
+#include <osgDB/WriteFile>
 #include <osgUtil/Optimizer>
 #include <osgUtil/Tessellator>
 #include <osgEarth/ECEF>
@@ -255,7 +256,7 @@ AerodromeRenderer::apply(RunwayNode& node)
 
     osg::ref_ptr<osg::Node> geom;
 
-    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
+    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->createVec3dArray();
     if (geomPoints.valid() && geomPoints->size() == 4)
     {
         std::vector<osg::Vec3d> featurePoints;
@@ -399,7 +400,7 @@ AerodromeRenderer::apply(StopwayNode& node)
 
     osg::ref_ptr<osg::Node> geom;
 
-    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->toVec3dArray();
+    osg::ref_ptr<osg::Vec3dArray> geomPoints = feature->getGeometry()->createVec3dArray();
     if (geomPoints.valid() && geomPoints->size() == 4)
     {
         std::vector<osg::Vec3d> featurePoints;
@@ -660,6 +661,12 @@ AerodromeRenderer::apply(TerminalNode& node)
         styleSheet->addStyle( roofStyle );
 
         geom = defaultFeatureRenderer(feature.get(), buildingStyle, styleSheet.get());
+
+        if ( node.icao() == "KSFO" )
+        {
+            static int count = 0;
+            osgDB::writeNodeFile(*geom, Stringify() << "out" << count++ << ".osgt");
+        }
     }
     else
     {
@@ -881,7 +888,7 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
         {
             Geometry* part = polygonIter.next();
 
-            osg::ref_ptr<osg::Vec3dArray> partVerts = part->toVec3dArray();
+            osg::ref_ptr<osg::Vec3dArray> partVerts = part->createVec3dArray();
             if ( partVerts.valid() && partVerts->size() > 2 )
             {
                 partOffset.push_back(offset);

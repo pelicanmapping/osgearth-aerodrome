@@ -31,21 +31,19 @@
     </image>
 
     <extensions>
-        
-        <!--
-        <normalmap/>    
-
-        <bumpmap>
-            <image>../data/rock_hard.jpg</image>
-            <octaves>32</octaves>
-            <intensity>1.5</intensity>
-        </bumpmap>
-        -->
     
-        <splat>
-            <coverage>GLOBCOVER</coverage>
-            <legend>C:/dev/git/osgearth/data/splat/GLOBCOVER_legend.xml</legend>
-            <catalog>C:/dev/git/osgearth/data/splat/splat_catalog.xml</catalog>
+        <splat>   
+            <coverage>
+                <layer>GLOBCOVER</layer>
+                <legend>C:/dev/git/osgearth/data/splat/GLOBCOVER_legend.xml</legend>
+            </coverage>            
+            <zones>
+                <zone name="default" doc="Default Climate Zone">            
+                    <surface>
+                        <catalog>C:/dev/git/osgearth/data/splat/splat_catalog.xml</catalog>
+                    </surface>
+                </zone>                
+            </zones>
         </splat>
             
         <viewpoints>

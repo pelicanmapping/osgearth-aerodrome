@@ -41,6 +41,8 @@
 
 #include <osgEarth/Registry>
 
+#include <osgEarthUtil/HTM>
+
 #include <osg/PagedLOD>
 #include <osgDB/FileNameUtils>
 #include <osgDB/Registry>
@@ -50,6 +52,7 @@ using namespace osgEarth;
 using namespace osgEarth::Features;
 using namespace osgEarth::Aerodrome;
 using namespace osgEarth::Symbology;
+using namespace osgEarth::Util;
 
 #define LC "[AerodromeFactory] "
 
@@ -431,7 +434,7 @@ AerodromeFactory::createAerodrome(AerodromeCatalog* catalog, const std::string& 
 
     for(AerodromeOptionsSet::const_iterator i = catalog->taxiwayOptions().begin(); i != catalog->taxiwayOptions().end(); ++i)
         AerodromeFactory::createMergedFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
-    
+
     for(AerodromeOptionsSet::const_iterator i = catalog->runwayOptions().begin(); i != catalog->runwayOptions().end(); ++i)
         AerodromeFactory::createFeatureNodes<RunwayNode, RunwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
@@ -499,6 +502,13 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
 {
     removeChildren(0, getNumChildren());
 
+    // set up a spatial indexing tree
+    HTMGroup* tree = new HTMGroup();
+    tree->setEllipsoid( _map->getSRS()->getEllipsoid() );
+    tree->setMaxLeaves( 1 );
+    tree->setMaxLeafRange( _lodRange );
+    this->addChild( tree );
+
     OE_DEBUG << LC << "Seeding aerodromes from boundaries." << std::endl;
 
     int aeroCount = 0;
@@ -537,8 +547,9 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
                     p->setCenter(center);
                     p->setRadius(std::max((float)f->getGeometry()->getBounds().radius(), _lodRange));
                     p->setRange(0, 0.0f, _lodRange);
+                    p->setName( icao );
 
-                    addChild(p);
+                    tree->addChild( p );
 
                     aeroCount++;
                 }
