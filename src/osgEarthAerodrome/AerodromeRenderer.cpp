@@ -933,7 +933,9 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
         }
 
         osgEarth::Tessellator tess;
-        if ( tess.tessellateGeometry(*geometry) == false )
+        bool tessOK = tess.tessellateGeometry(*geometry);
+
+        if ( !tessOK )
         {
             osgUtil::Tessellator tess2;
             tess2.setTessellationType( osgUtil::Tessellator::TESS_TYPE_GEOMETRY );
@@ -945,8 +947,12 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
         geometry->setColorArray(0L);
         geometry->setNormalArray(0L);
 
-        // get rid of tristrips and fans for better optimization later
-        MeshConsolidator::convertToTriangles( *geometry );
+        if ( !tessOK )
+        {
+            // The OSG tessellator generates strips and fans, which we don't want because
+            // the geometry merge optimization won't work at its full potential
+            MeshConsolidator::convertToTriangles( *geometry );
+        }
 
         geode->addDrawable(geometry);
     }
