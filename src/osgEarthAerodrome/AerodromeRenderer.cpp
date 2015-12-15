@@ -52,10 +52,12 @@
 #include <osgEarthFeatures/FeatureSource>
 #include <osgEarthFeatures/GeometryCompiler>
 #include <osgEarthFeatures/TransformFilter>
+#include <osgEarthSymbology/MeshConsolidator>
 
 
 using namespace osgEarth;
 using namespace osgEarth::Features;
+using namespace osgEarth::Symbology;
 using namespace osgEarth::Aerodrome;
 
 #define LC "[AerodromeRenderer] "
@@ -97,6 +99,8 @@ void AerodromeRenderer::initialize(const Map* map, const osgDB::Options* options
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
+    OE_START_TIMER(icaorender);
+
     OE_INFO << LC << "Rendering aerodrome: " << node.icao() << "..." << std::endl;
 
     // don't rerender if unnecessary 
@@ -121,7 +125,8 @@ AerodromeRenderer::apply(AerodromeNode& node)
 
     traverse(node);
 
-    OE_INFO << LC << "...finished rendering aerodrome: " << node.icao() << std::endl;
+    double seconds = OE_STOP_TIMER(icaorender);
+    OE_INFO << LC << "...finished rendering aerodrome " << node.icao() << ", time = " << seconds << "s." << std::endl;
 }
 
 void
@@ -936,8 +941,12 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
             tess2.retessellatePolygons( *geometry );
         }
 
+        // remove the color/normal arrays; don't need them
         geometry->setColorArray(0L);
         geometry->setNormalArray(0L);
+
+        // get rid of tristrips and fans for better optimization later
+        MeshConsolidator::convertToTriangles( *geometry );
 
         geode->addDrawable(geometry);
     }

@@ -431,7 +431,7 @@ AerodromeFactory::createAerodrome(AerodromeCatalog* catalog, const std::string& 
     
     for(AerodromeOptionsSet::const_iterator i = catalog->pavementOptions().begin(); i != catalog->pavementOptions().end(); ++i)
         AerodromeFactory::createMergedFeatureNodes<PavementNode, PavementGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
-
+    
     for(AerodromeOptionsSet::const_iterator i = catalog->taxiwayOptions().begin(); i != catalog->taxiwayOptions().end(); ++i)
         AerodromeFactory::createMergedFeatureNodes<TaxiwayNode, TaxiwayGroup, AerodromeFeatureOptions>(*i, aerodrome, options);
 
@@ -530,6 +530,7 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
             Feature* f = cursor->nextFeature();
 
             std::string icao = f->getString(i->icaoAttr().value());
+
             if (!icao.empty())
             {
                 // create PagedLOD for this aerodrome
