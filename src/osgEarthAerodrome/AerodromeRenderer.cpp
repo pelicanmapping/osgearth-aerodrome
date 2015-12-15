@@ -99,10 +99,6 @@ void AerodromeRenderer::initialize(const Map* map, const osgDB::Options* options
 void
 AerodromeRenderer::apply(AerodromeNode& node)
 {
-    OE_START_TIMER(icaorender);
-
-    OE_INFO << LC << "Rendering aerodrome: " << node.icao() << "..." << std::endl;
-
     // don't rerender if unnecessary 
     if (node.getRendered())
         return;
@@ -124,9 +120,6 @@ AerodromeRenderer::apply(AerodromeNode& node)
     }
 
     traverse(node);
-
-    double seconds = OE_STOP_TIMER(icaorender);
-    OE_INFO << LC << "...finished rendering aerodrome " << node.icao() << ", time = " << seconds << "s." << std::endl;
 }
 
 void

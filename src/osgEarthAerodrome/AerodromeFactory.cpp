@@ -473,21 +473,26 @@ AerodromeNode* AerodromeFactory::getAerodromeNode(const std::string& icao)
     if (!_renderer.valid())
         return 0L;
 
-    _mutex.writeLock();
+    OE_START_TIMER(getAerodromeNode);
 
     // create AerodromeNode
+    OE_START_TIMER(create);
     osg::ref_ptr<AerodromeNode> node = createAerodrome(_catalog, icao, _dbOptions);
+    float createTime = OE_STOP_TIMER(create);
 
     // render
+    OE_START_TIMER(render);
     if (_renderer.valid())
         node->accept(*_renderer.get());
 
     // Generate shaders (using a cache)
     osg::ref_ptr<osgEarth::StateSetCache> cache = new osgEarth::StateSetCache();
     osgEarth::Registry::shaderGenerator().run( node, "Aerodrome", cache.get() );
+    float renderTime = OE_STOP_TIMER(render);
 
-    _mutex.writeUnlock();
-
+    float s = OE_STOP_TIMER(getAerodromeNode);
+    OE_INFO << LC << std::setprecision(3) << "Built \"" << icao << "\" - create=" << createTime << "s, render=" << renderTime << "s, total=" << s << "s\n";
+    
     return node.release();
 }
 
@@ -505,7 +510,7 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
     // set up a spatial indexing tree
     HTMGroup* tree = new HTMGroup();
     tree->setEllipsoid( _map->getSRS()->getEllipsoid() );
-    tree->setMaxLeaves( 1 );
+    tree->setMaxLeaves( 4 );
     tree->setMaxLeafRange( _lodRange );
     this->addChild( tree );
 
