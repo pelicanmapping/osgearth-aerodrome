@@ -513,7 +513,6 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
 
     // set up a spatial indexing tree
     HTMGroup* tree = new HTMGroup();
-    tree->setEllipsoid( _map->getSRS()->getEllipsoid() );
     tree->setMaxLeaves( 4 );
     tree->setMaxLeafRange( _lodRange );
     this->addChild( tree );
