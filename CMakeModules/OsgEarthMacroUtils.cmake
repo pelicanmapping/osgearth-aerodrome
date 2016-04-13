@@ -230,6 +230,10 @@ MACRO(SETUP_PLUGIN PLUGIN_NAME)
     ENDIF(NOT MSVC)
     SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PROJECT_LABEL "${TARGET_LABEL}")
 
+    IF(UNIX)
+    	SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PREFIX "")
+    ENDIF(UNIX)
+
     SETUP_LINK_LIBRARIES()
 
 #the installation path are differentiated for win32 that install in bib versus other architecture that install in lib${LIB_POSTFIX}/${VPB_PLUGINS}
