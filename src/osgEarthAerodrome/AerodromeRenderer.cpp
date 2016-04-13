@@ -93,7 +93,7 @@ void AerodromeRenderer::initialize(const Map* map, const osgDB::Options* options
 
     // Global session with a resource cache
     _session = new Session(map, 0L, 0L, options );
-    _session->setResourceCache( new ResourceCache(options) );
+    _session->setResourceCache( new ResourceCache() );
 }
 
 void
