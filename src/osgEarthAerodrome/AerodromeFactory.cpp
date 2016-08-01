@@ -239,11 +239,22 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
         return;
     }
 
+    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
+    if (!featureSource.valid())
+    {
+        OE_WARN << LC << "Skipping boundary source; failed to create driver \"" << featureOpts.featureOptions()->getDriver() << "\"" << std::endl;
+        return;
+    }
+
+    const Status& status = featureSource->open(options);
+    if (status.isError())
+    {
+        OE_WARN << LC << "Skipping boundary source; open failed: " << status.message() << std::endl;
+        return;
+    }
+
     Y* parentGroup = new Y();
     aerodrome->addChild(parentGroup);
-
-    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
-    featureSource->initialize(options);
 
     OE_DEBUG << LC << "Reading features...\n";
 
@@ -297,11 +308,22 @@ void AerodromeFactory::createMergedFeatureNodes(P featureOpts, AerodromeNode* ae
         return;
     }
 
+    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
+    if (!featureSource.valid())
+    {
+        OE_WARN << LC << "Skipping boundary source; failed to create driver \"" << featureOpts.featureOptions()->getDriver() << "\"" << std::endl;
+        return;
+    }
+
+    const Status& status = featureSource->open(options);
+    if (status.isError())
+    {
+        OE_WARN << LC << "Skipping boundary source; open failed: " << status.message() << std::endl;
+        return;
+    }
+
     Y* parentGroup = new Y();
     aerodrome->addChild(parentGroup);
-
-    osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(featureOpts.featureOptions().value());
-    featureSource->initialize(options);
 
     OE_DEBUG << LC << "Reading features...\n";
 
@@ -372,7 +394,12 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
     }
 
     osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(boundaryOpts.featureOptions().value());
-    featureSource->initialize(options);
+    const Status& status = featureSource->open(options);
+    if (status.isError())
+    {
+        OE_WARN << LC << "No feature data: " << status.message() << std::endl;
+        return;
+    }
     
     Query query;
     query.expression() = s_makeQuery(boundaryOpts.icaoAttr().value(), aerodrome->icao());
@@ -530,7 +557,18 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
         }
 
         osg::ref_ptr<FeatureSource> featureSource = FeatureSourceFactory::create(i->featureOptions().value());
-        featureSource->initialize(options);
+        if (!featureSource.valid())
+        {
+            OE_WARN << LC << "Skipping boundary source; failed to create driver \"" << i->featureOptions()->getDriver() << "\"" << std::endl;
+            continue;
+        }
+
+        const Status& status = featureSource->open(options);
+        if (status.isError())
+        {
+            OE_WARN << LC << "Skipping boundary source; open failed: " << status.message() << std::endl;
+            continue;
+        }
 
         osg::ref_ptr<FeatureCursor> cursor = featureSource->createFeatureCursor();
         while ( cursor.valid() && cursor->hasMore() )

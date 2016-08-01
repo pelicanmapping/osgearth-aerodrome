@@ -660,11 +660,11 @@ AerodromeRenderer::apply(TerminalNode& node)
 
         geom = defaultFeatureRenderer(feature.get(), buildingStyle, styleSheet.get());
 
-        if ( node.icao() == "KSFO" )
-        {
-            static int count = 0;
-            osgDB::writeNodeFile(*geom, Stringify() << "out" << count++ << ".osgt");
-        }
+        //if ( node.icao() == "KSFO" )
+        //{
+        //    static int count = 0;
+        //    osgDB::writeNodeFile(*geom, Stringify() << "out" << count++ << ".osgt");
+        //}
     }
     else
     {
@@ -965,7 +965,7 @@ AerodromeRenderer::featureSingleTextureRenderer(osgEarth::Features::Feature* fea
         osg::Vec3Array* normals = new osg::Vec3Array();
         normals->push_back( osg::Vec3(0.0f, 0.0f, 1.0f) );
 
-        for(int i=0; i<geode->getNumDrawables(); ++i)
+        for(unsigned i=0; i<geode->getNumDrawables(); ++i)
         {
             geode->getDrawable(i)->asGeometry()->setNormalArray( normals );
             geode->getDrawable(i)->asGeometry()->setNormalBinding( osg::Geometry::BIND_OVERALL );

@@ -49,8 +49,6 @@ namespace osgEarth { namespace Drivers { namespace Aerodrome
 
     public: // ModelSource
 
-        virtual void initialize( const osgDB::Options* dbOptions =0L );
-
         virtual osg::Node* createNodeImplementation(
             const Map*            map,
             ProgressCallback*     progress );
@@ -67,6 +65,8 @@ namespace osgEarth { namespace Drivers { namespace Aerodrome
 
         /** DTOR is protected to prevent this object from being allocated on the stack */
         virtual ~AerodromeModelSource() { }
+
+        virtual Status initialize( const osgDB::Options* dbOptions);
 
         const ModelSourceOptions _options;
         osg::ref_ptr<AerodromeCatalog> _catalog;

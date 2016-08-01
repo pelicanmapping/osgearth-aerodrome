@@ -40,11 +40,9 @@ _options   ( options )
     //nop
 }
 
-void 
+Status
 AerodromeModelSource::initialize(const osgDB::Options* dbOptions)
 {
-    ModelSource::initialize( dbOptions );
-
     _dbOptions = dbOptions;
 
     std::string uri = _options.getConfig().value("url");
@@ -57,6 +55,8 @@ AerodromeModelSource::initialize(const osgDB::Options* dbOptions)
         _catalog = new AerodromeCatalog();
         _catalog->fromConfig(_options.getConfig());
     }
+
+    return Status::OK();
 }
 
 osg::Node*
