@@ -52,7 +52,9 @@
 #include <osgEarthFeatures/FeatureSource>
 #include <osgEarthFeatures/GeometryCompiler>
 #include <osgEarthFeatures/TransformFilter>
+#include <osgEarthFeatures/FilterContext>
 #include <osgEarthSymbology/MeshConsolidator>
+#include <osgEarthSymbology/StyleSheet>
 
 
 using namespace osgEarth;
@@ -75,14 +77,25 @@ using namespace osgEarth::Aerodrome;
 // macro to set a render order and to force a negative polygon offset on ground-co-planar components.
 #define SET_ORDER(NODE, NUMBER) \
     (NODE).getOrCreateStateSet()->setRenderBinDetails( (NUMBER)+_baseRenderBinNum, "RenderBin" ); \
-    (NODE).getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(-1,-1), 1)
+    (NODE).getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(-1, -1), osg::StateAttribute::ON)
 
-
+// macro to set a render order and to force a negative polygon offset on ground-co-planar components
+// for use with reverse Z buffer (Vantage style - clip control, znear: 1, far: 0, depth test: greater or gequal)
+#define SET_ORDER_REV(NODE, NUMBER) \
+   (NODE).getOrCreateStateSet()->setRenderBinDetails( (NUMBER)+_baseRenderBinNum, "RenderBin" ); \
+   (NODE).getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonOffset(1, 1), osg::StateAttribute::ON | osg::StateAttribute::PROTECTED)
 
 AerodromeRenderer::AerodromeRenderer()
   : osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
     _baseRenderBinNum(1)
 {
+ setUseReverseZBuffer(false);
+}
+
+
+AerodromeRenderer::~AerodromeRenderer()
+{
+  
 }
 
 void AerodromeRenderer::initialize(const Map* map, const osgDB::Options* options)
@@ -214,10 +227,12 @@ AerodromeRenderer::apply(LinearFeatureNode& node)
 
     if ( geom.valid() )
     {
+       setDepthState(geom);
+       geom->setName(node.icao() + "_LINEAR_FEATURES");
         node.addChild( geom );
     }
 
-    SET_ORDER( node, ORDER_LINEARFEATURE );
+    setBinAndOffset(node, ORDER_LINEARFEATURE);
 }
 
 void
@@ -236,15 +251,15 @@ AerodromeRenderer::apply(PavementNode& node)
         geom = defaultFeatureRenderer(feature.get(), Color(0.6, 0.6, 0.6, 1.0));
     }
 
-    if (geom.valid())
+     if (geom.valid())
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
+        setDepthState(geom);
         //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_PAVEMENT");
         node.addChild(geom);
     }
 
-    SET_ORDER( node, ORDER_PAVEMENT );
+    setBinAndOffset(node, ORDER_PAVEMENT);
 }
 
 void
@@ -363,13 +378,13 @@ AerodromeRenderer::apply(RunwayNode& node)
 
     if (geom.valid())
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
-        //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
+        setDepthState(geom);
         node.addChild(geom);
     }
 
-    SET_ORDER( node, ORDER_RUNWAY );
+    setBinAndOffset(node, ORDER_RUNWAY);
 }
+
 
 void
 AerodromeRenderer::apply(RunwayThresholdNode& node)
@@ -537,14 +552,14 @@ AerodromeRenderer::apply(StopwayNode& node)
         geom = defaultFeatureRenderer(feature.get(), Color::White);
     }
 
-    if (geom)
+    if (geom.valid())
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
+        setDepthState(geom);
         //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         node.addChild(geom);
     }
 
-    SET_ORDER( node, ORDER_STOPWAY );
+    setBinAndOffset(node, ORDER_STOPWAY);
 }
 
 void
@@ -565,13 +580,13 @@ AerodromeRenderer::apply(TaxiwayNode& node)
 
     if (geom.valid())
     {
-        geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false) );
+        setDepthState(geom);
         //geom->getOrCreateStateSet()->setRenderBinDetails(0, "RenderBin");
         geom->setName(node.icao() + "_TAXIWAY");
         node.addChild(geom);
     }
 
-    SET_ORDER( node, ORDER_TAXIWAY );
+    setBinAndOffset(node, ORDER_TAXIWAY);
 }
 
 void
@@ -659,12 +674,6 @@ AerodromeRenderer::apply(TerminalNode& node)
         styleSheet->addStyle( roofStyle );
 
         geom = defaultFeatureRenderer(feature.get(), buildingStyle, styleSheet.get());
-
-        //if ( node.icao() == "KSFO" )
-        //{
-        //    static int count = 0;
-        //    osgDB::writeNodeFile(*geom, Stringify() << "out" << count++ << ".osgt");
-        //}
     }
     else
     {
@@ -1113,7 +1122,7 @@ AerodromeRenderer::createLocalizations(const osgEarth::Bounds& bounds, BoundaryN
     else
     {
         ElevationQuery eq(_map.get());
-        eq.getElevation(anchor, _elevation, 0.005);
+        eq.getElevation(anchor, _elevation);
         OE_WARN << LC << "No elevation data in boundary; using an elevation query" << std::endl;
     }
 
@@ -1165,4 +1174,43 @@ AerodromeRenderer::transformAndLocalize(const osg::Vec3d& input, const SpatialRe
     local.z() = 0.0;
 
     return local;
+}
+
+
+void AerodromeRenderer::setBinAndOffset(AerodromeFeatureNode& node, int bin)
+{
+   if (_useReverseZBuffer)
+   {
+      SET_ORDER_REV(node, bin);
+   }
+   else
+   {
+      SET_ORDER(node, bin);
+   }
+}
+
+void AerodromeRenderer::setDepthState(osg::ref_ptr<osg::Node> geom)
+{
+   if (_useReverseZBuffer)
+   {
+      // I would have thought this was DEPTH_RANGE_MAX to 0, but it makes the 
+      // objects way too close in depth buffer (do nSight capture with false -> true
+      // to turn z writes on)
+      // I think the reverse z buffer projection matrix remaps 0 to 1 -> 1 to 0
+      geom->getOrCreateStateSet()->setAttributeAndModes(new osg::Depth(osg::Depth::GEQUAL, 0.0, DEPTH_RANGE_MAX, false), osg::StateAttribute::ON | osg::StateAttribute::PROTECTED);
+   }
+   else
+   {
+      geom->getOrCreateStateSet()->setAttributeAndModes(new osg::Depth(osg::Depth::LEQUAL, 0.0, DEPTH_RANGE_MAX, false), osg::StateAttribute::ON);
+   }
+}
+
+void AerodromeRenderer::setUseReverseZBuffer(bool useReverseZ)
+{
+   _useReverseZBuffer = useReverseZ;
+}
+
+bool AerodromeRenderer::getUseReverseZBuffer()
+{
+   return _useReverseZBuffer;
 }

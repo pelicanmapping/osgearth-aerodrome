@@ -59,6 +59,7 @@ namespace osgEarth { namespace Aerodrome
 
         /** Access a global AerodromeFactory singleton. */
         static void setDefaultRenderer(AerodromeRenderer* renderer);
+        static AerodromeRenderer* getDefaultRenderer() { return s_renderer; }
 
     protected:
 

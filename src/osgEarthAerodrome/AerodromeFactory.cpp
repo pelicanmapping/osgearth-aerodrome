@@ -38,6 +38,7 @@
 
 #include <osgEarthFeatures/Feature>
 #include <osgEarthFeatures/FeatureSource>
+#include <osgEarthFeatures/FeatureCursor>
 
 #include <osgEarth/Registry>
 
@@ -212,7 +213,7 @@ AerodromeFactory::init(const osgDB::Options* options)
     //_dbOptions->setObjectCacheHint( osgDB::Options::CACHE_IMAGES );
 
     // create and initialize a renderer
-    _renderer = s_renderer.valid() ? s_renderer : new AerodromeRenderer();
+    _renderer = s_renderer.valid() ? (osgEarth::Aerodrome::AerodromeRenderer*)s_renderer : new AerodromeRenderer();
     _renderer->initialize(_map, _dbOptions);
 
     // setup the PagedLODs
@@ -540,11 +541,12 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
 
     // set up a spatial indexing tree
     HTMGroup* tree = new HTMGroup();
-    tree->setMaxLeaves( 4 );
-    tree->setMaxLeafRange( _lodRange );
+    tree->setMaximumObjectsPerCell(4);
+    tree->setMaxRange( _lodRange );
+    tree->setStoreObjectsInLeavesOnly(true);
     this->addChild( tree );
 
-    OE_DEBUG << LC << "Seeding aerodromes from boundaries." << std::endl;
+    OE_INFO << LC << "Seeding aerodromes from boundaries." << std::endl;
 
     int aeroCount = 0;
 

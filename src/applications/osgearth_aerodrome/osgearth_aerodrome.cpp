@@ -24,6 +24,7 @@
 #include <osgearthAerodrome/AerodromeFactory>
 #include <osgearthAerodrome/AerodromeRenderer>
 #include <osgEarthFeatures/BuildGeometryFilter>
+#include <osgEarthFeatures/FilterContext>
 
 #define LC "[viewer] "
 

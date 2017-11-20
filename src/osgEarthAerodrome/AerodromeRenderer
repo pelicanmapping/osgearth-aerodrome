@@ -23,6 +23,7 @@
 #include <osg/NodeVisitor>
 
 #include <osgEarthFeatures/Feature>
+#include <osgEarthSymbology/StyleSheet>
 #include <osgEarth/Map>
 
 #include "Common"
@@ -56,6 +57,9 @@ namespace osgEarth { namespace Aerodrome
         /** Constructor */
         AerodromeRenderer();
 
+        /* Destructor */
+        virtual ~AerodromeRenderer();
+
         /** Sets the starting render bin number for ordered drawing */
         void setBaseRenderBinNum(int base) { _baseRenderBinNum = base; }
 
@@ -88,6 +92,14 @@ namespace osgEarth { namespace Aerodrome
 
         virtual void apply(osg::Group& node);
 
+        // Set whether to use reverse Z buffer
+        // Should be called early, before apply(...)
+        // functions are called
+        void setUseReverseZBuffer(bool useReverseZ);
+
+        // Are we using the reverse Z buffer?
+        bool getUseReverseZBuffer();
+
     protected:
 
         friend class AerodromeFactory;
@@ -113,6 +125,14 @@ namespace osgEarth { namespace Aerodrome
         osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Color& color, float height=-1.0f);
         osg::Node* defaultFeatureRenderer(osgEarth::Features::Feature* feature, const Style& style, StyleSheet* styleSheet=0L);
 
+        // Set up the renderin and polygon offset for this
+        // aerodrome feature (ex. LinearFeatureNode, bin=ORDER_LINEARFEATURE)
+        // offset different for normal vs. reverse Z buffer
+        void setBinAndOffset(AerodromeFeatureNode& node, int bin);
+
+        // Set up the depth comparison (different for normal
+        // vs. reverse Z buffer)
+        void setDepthState(osg::ref_ptr<osg::Node> geom);
 
         osg::ref_ptr<const Map> _map;
         osg::ref_ptr<osgDB::Options> _dbOptions;
@@ -122,6 +142,9 @@ namespace osgEarth { namespace Aerodrome
         osg::Vec3d _localMin;
         osg::ref_ptr<Session> _session;
         int _baseRenderBinNum;
+
+        // For reverse Z support - set up initially like normal Z buffer
+        bool _useReverseZBuffer;
     };
 
 } } // namespace osgEarth::Aerodrome
