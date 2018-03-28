@@ -272,7 +272,7 @@ void AerodromeFactory::createFeatureNodes(P featureOpts, AerodromeNode* aerodrom
         /* **************************************** */
         /* Necessary but not sure why               */
 
-        const SpatialReference* ecefSRS = f->getSRS()->getGeographicSRS()->getECEF();
+        const SpatialReference* ecefSRS = f->getSRS()->getGeocentricSRS();
 
         /* **************************************** */
 
@@ -347,7 +347,7 @@ void AerodromeFactory::createMergedFeatureNodes(P featureOpts, AerodromeNode* ae
         /* **************************************** */
         /* Necessary but not sure why               */
 
-        const SpatialReference* ecefSRS = f->getSRS()->getGeographicSRS()->getECEF();
+        const SpatialReference* ecefSRS = f->getSRS()->getGeocentricSRS();
 
         /* **************************************** */
 
@@ -413,7 +413,7 @@ void AerodromeFactory::createBoundaryNodes(BoundaryFeatureOptions boundaryOpts, 
         /* **************************************** */
         /* Necessary but not sure why               */
 
-        const SpatialReference* ecefSRS = f->getSRS()->getGeographicSRS()->getECEF();
+        const SpatialReference* ecefSRS = f->getSRS()->getGeocentricSRS();
 
         /* **************************************** */
 

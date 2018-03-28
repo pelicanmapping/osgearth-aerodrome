@@ -1,128 +1,128 @@
 <catalog name="Aerodrome Test" version="1">
 
-	<description>Aerodrome test catalog</description>
+    <description>Aerodrome test catalog</description>
 
-        <boundaries elevation_attr="ELEVATION">
-                <features name="xplane_airport_boundaries" driver="ogr">
-                        <url>./APTBoundary_Elev_v3.shp</url>
-                </features>
-        </boundaries>
+    <boundaries elevation_attr="ELEVATION">
+        <features name="xplane_airport_boundaries" driver="ogr">
+            <url>./APTBoundary_Elev_v3.shp</url>
+        </features>
+    </boundaries>
 
-        <light_beacons>
-                <features name="xplane_light_beacons" driver="ogr">
-                        <url>./z_APTLightBeacon.shp</url>
-                </features>
+    <light_beacons>
+        <features name="xplane_light_beacons" driver="ogr">
+            <url>./z_APTLightBeacon.shp</url>
+        </features>
 
-                <model>
-                        <url>../../data/models/light_beacon/antenas.flt</url>
-                </model>
-        </light_beacons>
+        <model>
+            <url>../../data/models/light_beacon/antenas.flt</url>
+        </model>
+    </light_beacons>
 
-        <light_indicators>
-                <features name="xplane_light_indicators" driver="ogr">
-                        <url>./z_VASI_PAPI_WIGWAG.shp</url>
-                </features>
+    <light_indicators>
+        <features name="xplane_light_indicators" driver="ogr">
+            <url>./z_VASI_PAPI_WIGWAG.shp</url>
+        </features>
 
-                <model>
-                        <url>../../data/models/papi/PAPI-Lights.flt</url>
-                </model>
+        <model>
+            <url>../../data/models/papi/PAPI-Lights.flt</url>
+        </model>
 
-                <model>
-                        <url>../../data/models/vasi/vasi.flt</url>
-                        <selector attr="type" value="VASI"/>
-                </model>
+        <model>
+            <url>../../data/models/vasi/vasi.flt</url>
+            <selector attr="type" value="VASI"/>
+        </model>
 
-                <model>
-                        <url>../../data/models/wigwag/wigwag.flt</url>
-                        <selector attr="type" value="Wig-Wag lights"/>
-                </model>
-        </light_indicators>
+        <model>
+            <url>../../data/models/wigwag/wigwag.flt</url>
+            <selector attr="type" value="Wig-Wag lights"/>
+        </model>
+    </light_indicators>
 
-        <linear_features>
-                <features name="xplane_linearfeatures" driver="ogr">
-                        <url>./z_APTLinearFeature.shp</url>
-                </features>
-        </linear_features>
+    <linear_features>
+        <features name="xplane_linearfeatures" driver="ogr">
+            <url>./z_APTLinearFeature.shp</url>
+        </features>
+    </linear_features>
 
-        <pavement>
-                <features name="xplane_pavement" driver="ogr">
-                        <url>./z_Pavement.shp</url>
-                </features>
+    <pavement>
+        <features name="xplane_pavement" driver="ogr">
+            <url>./z_Pavement.shp</url>
+        </features>
 
-                <texture length="15">
-                        <url>../../data/textures/pavement.jpg</url>
-                </texture>
-        </pavement>
+        <texture length="15">
+            <url>../../data/textures/pavement.jpg</url>
+        </texture>
+    </pavement>
 
-        <runways>
-                <features name="xplane_runways" driver="ogr">
-                        <url>./z_RunwayPolygon.shp</url>
-                </features>
+    <runways>
+        <features name="xplane_runways" driver="ogr">
+            <url>./z_RunwayPolygon.shp</url>
+        </features>
 
-                <texture>
-                        <url>../../data/textures/runway.jpg</url>
-                </texture>
-        </runways>
+        <texture>
+            <url>../../data/textures/runway.jpg</url>
+        </texture>
+    </runways>
 
-        <runway_thresholds>
-                <features name="xplane_runway_thresholds" driver="ogr">
-                        <url>./z_RunwayThreshold.shp</url>
-                </features>
-        </runway_thresholds>
+    <runway_thresholds>
+        <features name="xplane_runway_thresholds" driver="ogr">
+            <url>./z_RunwayThreshold.shp</url>
+        </features>
+    </runway_thresholds>
 
-        <startup_locations>
-                <features name="xplane_startup_locations" driver="ogr">
-                        <url>./z_StartupLocation.shp</url>
-                </features>
-        </startup_locations>
+    <startup_locations>
+        <features name="xplane_startup_locations" driver="ogr">
+            <url>./z_StartupLocation.shp</url>
+        </features>
+    </startup_locations>
 
-        <stopways>
-                <features name="xplane_stopways" driver="ogr">
-                        <url>./z_Stopway.shp</url>
-                </features>
+    <stopways>
+        <features name="xplane_stopways" driver="ogr">
+            <url>./z_Stopway.shp</url>
+        </features>
 
-                <texture>
-                        <url>../../data/textures/stopway.jpg</url>
-                </texture>
-        </stopways>
+        <texture>
+            <url>../../data/textures/stopway.jpg</url>
+        </texture>
+    </stopways>
 
-        <taxiways>
-                <features name="xplane_taxiways" driver="ogr">
-                        <url>./z_TaxiwayRectangle.shp</url>
-                </features>
+    <taxiways>
+        <features name="xplane_taxiways" driver="ogr">
+            <url>./z_TaxiwayRectangle.shp</url>
+        </features>
 
-                <texture length="15">
-                        <url>../../data/textures/pavement.jpg</url>
-                </texture>
-        </taxiways>
+        <texture length="15">
+            <url>../../data/textures/pavement.jpg</url>
+        </texture>
+    </taxiways>
 
-        <taxiway_signs>
-                <features name="xplane_taxiway_signs" driver="ogr">
-                        <url>./z_TaxiwaySign.shp</url>
-                </features>
-        </taxiway_signs>
+    <taxiway_signs>
+        <features name="xplane_taxiway_signs" driver="ogr">
+            <url>./z_TaxiwaySign.shp</url>
+        </features>
+    </taxiway_signs>
 
-        <!-- the icao_attr property can be used to override the default value "apt_icao" -->
-        <terminals icao_attr="icao">
-                <features name="osm_terminals" driver="ogr">
-                        <url>./z_aeroway_terminal.shp</url>
-                </features>
+    <!-- the icao_attr property can be used to override the default value "apt_icao" -->
+    <terminals icao_attr="icao">
+        <features name="osm_terminals" driver="ogr">
+            <url>./z_aeroway_terminal.shp</url>
+        </features>
 
-                <skins>
-                        <url>../../data/resources/textures_terminals/catalog.xml</url>
-                        <wall_tag>terminal</wall_tag>
-                        <roof_tag>rooftop</roof_tag>
-                </skins>
-        </terminals>
+        <skins>
+            <url>../../data/resources/textures_terminals/catalog.xml</url>
+            <wall_tag>terminal</wall_tag>
+            <roof_tag>rooftop</roof_tag>
+        </skins>
+    </terminals>
 
-        <windsocks>
-                <features name="xplane_windsocks" driver="ogr">
-                        <url>./z_APTWindsock.shp</url>
-                </features>
+    <windsocks>
+        <features name="xplane_windsocks" driver="ogr">
+            <url>./z_APTWindsock.shp</url>
+        </features>
 
-                <model>
-                        <url>../../data/models/windsock/air_speed.flt</url>
-                </model>
-        </windsocks>
+        <model>
+            <url>../../data/models/windsock/air_speed.flt</url>
+        </model>
+    </windsocks>
 
 </catalog>

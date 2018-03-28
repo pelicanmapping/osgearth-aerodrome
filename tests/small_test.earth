@@ -10,15 +10,9 @@
         </features>
     </elevation>
 
-    <model name="aerodromes" driver="aerodrome">
-        <url>./small_test/catalog.xml</url>
-    </model>
-
-<!--    
     <aerodromes>
         <catalog>small_test/catalog.xml</catalog>
     </aerodromes>
--->
 
     <!-- Pre-load the splatting nodekit -->
     <libraries>osgEarthSplat</libraries>

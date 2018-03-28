@@ -23,6 +23,7 @@
 #include <osg/NodeVisitor>
 
 #include <osgEarthFeatures/Feature>
+#include <osgEarthFeatures/Session>
 #include <osgEarthSymbology/StyleSheet>
 #include <osgEarth/Map>
 
