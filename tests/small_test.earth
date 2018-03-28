@@ -1,16 +1,5 @@
-<!--
-
-|  Texture splatting test.
-|
-|  Run with splat.bat, (or splat-edit.bat for tweakery)
--->
-
 <map>
-        
-    <options>
-        <terrain min_lod="20" min_normal_map_lod="9"/>
-    </options>
-    
+
     <elevation name="readymap_elevation" driver="tms" enabled="true">
         <url>http://readymap.org/readymap/tiles/1.0.0/116/</url>
     </elevation>
@@ -24,40 +13,75 @@
     <model name="aerodromes" driver="aerodrome">
         <url>./small_test/catalog.xml</url>
     </model>
-    
-    <image name="GLOBCOVER" driver="gdal" shared="true" visible="false" coverage="true" enabled="true">
-        <url>C:/data/ESA/GLOBCOVER_L4_200901_200912_V2.3_tiled.tif</url>
-        <cache_policy usage="none"/>
-    </image>
 
-    <extensions>
-    
-        <splat>   
-            <coverage>
-                <layer>GLOBCOVER</layer>
-                <legend>C:/dev/git/osgearth/data/splat/GLOBCOVER_legend.xml</legend>
-            </coverage>            
-            <zones>
-                <zone name="default" doc="Default Climate Zone">            
-                    <surface>
-                        <catalog>C:/dev/git/osgearth/data/splat/splat_catalog.xml</catalog>
-                    </surface>
-                </zone>                
-            </zones>
-        </splat>
-            
-        <viewpoints>
-            <viewpoint name="KMKE" heading="12.4" lat="42.9472" long="-87.8967" height="0.0" pitch="-80" range="15000" />
-            <viewpoint name="KBFI" heading="12.4" lat="47.5300" long="-122.3019" height="0.0" pitch="-80" range="15000" />
-            <viewpoint name="KHEF" heading="12.4" lat="38.7214" long="-77.5156" height="0.0" pitch="-80.0" range="10000" />
-            <viewpoint name="KGSO" heading="12.4" lat="36.0978" long="-79.9372" height="0.0" pitch="-80" range="15000" />
-            <viewpoint name="KMMU" heading="12.4" lat="40.7994" long="-74.4150" height="0.0" pitch="-80" range="15000" />
-            <viewpoint name="sshot" heading="111.0252162283699" height="9.867343158461154" lat="47.52960299910875" long="-122.3012059344189" pitch="-11.95795528996846" range="562.5549797959304"/>
-            <sky driver="simple" hours="19.0"/>
-        </viewpoints>
+<!--    
+    <aerodromes>
+        <catalog>small_test/catalog.xml</catalog>
+    </aerodromes>
+-->
 
-        <sky driver="simple" hours="14.0"/>
-            
-    </extensions>
+    <!-- Pre-load the splatting nodekit -->
+    <libraries>osgEarthSplat</libraries>
+    
+    <!-- Land cover requires a dictionary that defines all the core classes -->
+    <xi:include href="H:/devel/osgearth/repo/data/land_cover_dictionary.xml"/>
+    
+    <!-- Land cover layer defines world wide classes -->
+    <land_cover name="LandCover" max_data_level="15">
+        <cache_policy usage="no_cache"/>
+        <coverages>
+            <coverage name="ESA GLOBCOVER" driver="gdal">
+                <url>H:/data/esa/GLOBCOVER_L4_200901_200912_V2.3_Ant_tiled.tif</url>
+                <profile>global-geodetic</profile>
+                <xi:include href="H:/devel/osgearth/repo/data/land_cover_ESA_GLOBCOVER.xml"/>
+                <warp>0.05</warp>
+            </coverage>
+        </coverages>
+    </land_cover>
+        
+    <!-- Procedural terrain imagery from land cover data -->
+    <splat_imagery name="Splat Imagery" land_cover_layer="LandCover">
+        <zones>
+            <zone name="default">
+                <surface>
+                    <catalog>H:/devel/osgearth/repo/data/splat/splat_catalog.xml</catalog>
+                </surface>
+            </zone>
+        </zones>
+    </splat_imagery>
+    
+    <!-- GPU trees from land cover data -->
+    <splat_groundcover name="Trees" land_cover_layer="LandCover">
+        <lod>13</lod>
+        <cast_shadows>true</cast_shadows>
+        <zones>
+            <zone name="default">
+                <groundcover>
+                    <max_distance>6400</max_distance>
+                    <density>3.4</density>
+                    <fill>0.45</fill>
+                    <brightness>2.0</brightness>
+                    <contrast>0.5</contrast>
+                    <biomes>
+                        <biome classes="forest">
+                            <billboard url="H:/devel/osgearth/repo/data/splat/cypress.png" width="12.0" height="14.0"/>
+                            <billboard url="H:/devel/osgearth/repo/data/splat/pine.png" width="16.0" height="22.0" />
+                            <billboard url="H:/devel/osgearth/repo/data/splat/pine2.png"width="15.0" height="18.0"/>
+                        </biome>
+                    </biomes>
+                </groundcover>
+            </zone>
+        </zones>
+    </splat_groundcover>
+
+    <viewpoints>
+        <viewpoint name="KMKE" heading="12.4" lat="42.9472" long="-87.8967" height="0.0" pitch="-80" range="15000" />
+        <viewpoint name="KBFI" heading="12.4" lat="47.5300" long="-122.3019" height="0.0" pitch="-80" range="15000" />
+        <viewpoint name="KHEF" heading="12.4" lat="38.7214" long="-77.5156" height="0.0" pitch="-80.0" range="10000" />
+        <viewpoint name="KGSO" heading="12.4" lat="36.0978" long="-79.9372" height="0.0" pitch="-80" range="15000" />
+        <viewpoint name="KMMU" heading="12.4" lat="40.7994" long="-74.4150" height="0.0" pitch="-80" range="15000" />
+        <viewpoint name="sshot" heading="111.0252162283699" height="9.867343158461154" lat="47.52960299910875" long="-122.3012059344189" pitch="-11.95795528996846" range="562.5549797959304"/>
+        <sky driver="simple" hours="19.0"/>
+    </viewpoints>
 
 </map>

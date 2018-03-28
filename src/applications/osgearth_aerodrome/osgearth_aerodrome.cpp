@@ -54,7 +54,7 @@ public:
           }
 
           osg::ref_ptr<osg::Vec3Array> verts = new osg::Vec3Array();
-          transformAndLocalize(featurePoints, _map->getSRS(), verts, 0L);
+          transformAndLocalize(featurePoints, _map->getSRS(), verts.get(), 0L);
 
           osg::ref_ptr< Feature > clone = new Feature(*feature, osg::CopyOp::DEEP_COPY_ALL);
           clone->getGeometry()->clear();
