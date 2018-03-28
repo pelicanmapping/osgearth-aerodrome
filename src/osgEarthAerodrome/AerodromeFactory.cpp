@@ -209,7 +209,7 @@ AerodromeFactory::init(const osgDB::Options* options)
 {
     _uid = osgEarthAerodromeModelPseudoLoader::registerFactory( this );
 
-    _dbOptions = new osgDB::Options( *options );
+    _dbOptions = options; //new osgDB::Options( *options );
     //_dbOptions->setObjectCacheHint( osgDB::Options::CACHE_IMAGES );
 
     // create and initialize a renderer

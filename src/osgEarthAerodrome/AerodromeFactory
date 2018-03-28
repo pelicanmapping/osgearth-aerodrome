@@ -80,7 +80,7 @@ namespace osgEarth { namespace Aerodrome
         UID _uid;
         osg::ref_ptr<const Map> _map;
         osg::ref_ptr<AerodromeCatalog> _catalog;
-        osg::ref_ptr<osgDB::Options> _dbOptions;
+        osg::ref_ptr<const osgDB::Options> _dbOptions;
         osg::ref_ptr<AerodromeRenderer> _renderer;
         mutable Threading::ReadWriteMutex _mutex;
         float _lodRange;

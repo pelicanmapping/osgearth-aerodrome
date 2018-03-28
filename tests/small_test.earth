@@ -10,7 +10,7 @@
         </features>
     </elevation>
 
-    <aerodromes>
+    <aerodromes cacheid="aero">
         <catalog>small_test/catalog.xml</catalog>
     </aerodromes>
 
