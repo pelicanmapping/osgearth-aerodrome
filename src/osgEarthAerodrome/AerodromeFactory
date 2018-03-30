@@ -28,6 +28,7 @@
 #include "AerodromeRenderer"
 #include "StopwayNode"
 #include <osgEarth/Map>
+#include <osgEarth/SceneGraphCallback>
 
 
 namespace osgEarth { namespace Aerodrome
@@ -42,8 +43,8 @@ namespace osgEarth { namespace Aerodrome
     {
     public:
 
-        AerodromeFactory(const Map* map, AerodromeCatalog* catalog, const osgDB::Options* options=0L);
-        AerodromeFactory(const Map* map, AerodromeCatalog* catalog, float lodRange, const osgDB::Options* options=0L);
+        AerodromeFactory(const Map* map, AerodromeCatalog* catalog, SceneGraphCallbacks* callbacks, const osgDB::Options* options);
+        AerodromeFactory(const Map* map, AerodromeCatalog* catalog, float lodRange, SceneGraphCallbacks* callbacks, const osgDB::Options* options);
 
         virtual ~AerodromeFactory();
 
@@ -60,6 +61,8 @@ namespace osgEarth { namespace Aerodrome
         /** Access a global AerodromeFactory singleton. */
         static void setDefaultRenderer(AerodromeRenderer* renderer);
         static AerodromeRenderer* getDefaultRenderer() { return s_renderer.get(); }
+
+        SceneGraphCallbacks* getSceneGraphCallbacks() const { return _sceneGraphCallbacks.get(); }
 
     protected:
 
@@ -82,6 +85,7 @@ namespace osgEarth { namespace Aerodrome
         osg::ref_ptr<AerodromeCatalog> _catalog;
         osg::ref_ptr<const osgDB::Options> _dbOptions;
         osg::ref_ptr<AerodromeRenderer> _renderer;
+        osg::ref_ptr<SceneGraphCallbacks> _sceneGraphCallbacks;
         mutable Threading::ReadWriteMutex _mutex;
         float _lodRange;
     };

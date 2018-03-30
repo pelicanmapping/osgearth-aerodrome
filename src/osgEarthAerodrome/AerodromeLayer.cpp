@@ -96,6 +96,10 @@ AerodromeLayer::addedToMap(const Map* map)
 void
 AerodromeLayer::createSceneGraph()
 {
+    // notify of removal:
+    if (_root->getNumChildren() > 0)
+        getSceneGraphCallbacks()->fireRemoveNode(_root->getChild(0));
+
     _root->removeChildren(0, _root->getNumChildren());
 
     if (options().renderOrder().isSet())
@@ -121,9 +125,13 @@ AerodromeLayer::createSceneGraph()
             map.get(),
             _catalog.get(),
             options().range().get(),
+            getSceneGraphCallbacks(),
             getReadOptions());
 
         _root->addChild(factory.get());
+
+        // notify of addition:
+        getSceneGraphCallbacks()->firePostMergeNode(factory.get());
     }
 }
 

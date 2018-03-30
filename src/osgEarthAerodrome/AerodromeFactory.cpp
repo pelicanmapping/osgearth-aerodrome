@@ -157,7 +157,12 @@ struct osgEarthAerodromeModelPseudoLoader : public osgDB::ReaderWriter
             Registry::instance()->endActivity(uri);
 
             if (node)
+            {
+                if (factory->getSceneGraphCallbacks())
+                    factory->getSceneGraphCallbacks()->firePreMergeNode(node);
+
                 return ReadResult(node);
+            }
         }
 
         return ReadResult::ERROR_IN_READING_FILE;
@@ -192,14 +197,21 @@ REGISTER_OSGPLUGIN(osgearth_pseudo_amf, osgEarthAerodromeModelPseudoLoader);
 
 osg::ref_ptr<AerodromeRenderer> AerodromeFactory::s_renderer = 0L;
 
-AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, const osgDB::Options* options)
-  : _map(map), _catalog(catalog), _lodRange(50000.0f)
+AerodromeFactory::AerodromeFactory(const Map* map, 
+                                   AerodromeCatalog* catalog,
+                                   SceneGraphCallbacks* callbacks,
+                                   const osgDB::Options* options)
+  : _map(map), _catalog(catalog), _sceneGraphCallbacks(callbacks), _lodRange(50000.0f)
 {
     init(options);
 }
 
-AerodromeFactory::AerodromeFactory(const Map* map, AerodromeCatalog* catalog, float lodRange, const osgDB::Options* options)
-  : _map(map), _catalog(catalog), _lodRange(lodRange)
+AerodromeFactory::AerodromeFactory(const Map* map, 
+                                   AerodromeCatalog* catalog,
+                                   float lodRange,                                    
+                                   SceneGraphCallbacks* callbacks,
+                                   const osgDB::Options* options)
+  : _map(map), _catalog(catalog), _sceneGraphCallbacks(callbacks), _lodRange(lodRange)
 {
     init(options);
 }
@@ -586,7 +598,10 @@ AerodromeFactory::seedAerodromes(AerodromeCatalog* catalog, const osgDB::Options
 
                 if (f->getGeometry())
                 {
-                    osg::PagedLOD* p = new osg::PagedLOD();
+                    osg::PagedLOD* p = _sceneGraphCallbacks.valid() ? 
+                        new PagedLODWithSceneGraphCallbacks(_sceneGraphCallbacks.get()) :
+                        new osg::PagedLOD();
+
                     p->setFileName(0, uri);
 
                     GeoPoint gp(f->getSRS(), f->getGeometry()->getBounds().center());
