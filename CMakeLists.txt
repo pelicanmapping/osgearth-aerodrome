@@ -31,7 +31,8 @@ set(OSGEARTH_AERODROME_SONAMES TRUE)
 
 # We have some custom .cmake scripts not in the official distribution.
 # Maybe this can be used override existing behavior if needed?
-set(CMAKE_MODULE_PATH "${OSGEARTH_AERODROME_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
+SET(CMAKE_MODULE_PATH "${OSGEARTH_AERODROMES_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
+MESSAGE(STATUS "${CMAKE_MODULE_PATH}")
 
 # Find our dependencies
 find_package(OpenGL)
