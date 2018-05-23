@@ -110,7 +110,7 @@ namespace osgEarth { namespace Aerodrome
     public: // Layer
 
         //! The root node of this layer's scene graph
-        virtual osg::Node* getOrCreateNode();
+        virtual osg::Node* getNode() const;
 
         //! Opens any data stores associated with the layer
         virtual const Status& open();

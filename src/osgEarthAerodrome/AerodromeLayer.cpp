@@ -61,7 +61,7 @@ AerodromeLayer::init()
 }
 
 osg::Node*
-AerodromeLayer::getOrCreateNode()
+AerodromeLayer::getNode() const
 {
     return _root.get();
 }
