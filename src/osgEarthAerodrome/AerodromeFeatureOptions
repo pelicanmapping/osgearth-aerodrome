@@ -51,8 +51,8 @@ namespace osgEarth { namespace Aerodrome
     public:
         Config getConfig() const {
             Config conf = ConfigOptions::getConfig();
-            conf.updateIfSet( "attr", _attr );
-            conf.updateIfSet( "value", _value );  
+            conf.set( "attr", _attr );
+            conf.set( "value", _value );  
             return conf;
         }
 
@@ -93,8 +93,8 @@ namespace osgEarth { namespace Aerodrome
     public:
         Config getConfig() const {
             Config conf = ConfigOptions::getConfig();
-            conf.updateIfSet( "url", _imageURI );
-            conf.updateIfSet( "length", _length );  
+            conf.set( "url", _imageURI );
+            conf.set( "length", _length );  
             return conf;
         }
 
@@ -142,10 +142,10 @@ namespace osgEarth { namespace Aerodrome
     public:
         Config getConfig() const {
             Config conf = ConfigOptions::getConfig();
-            conf.updateIfSet( "url", _imageURI );
-            conf.updateIfSet( "scale", _scale );
-            conf.updateObjIfSet( "selector", _selector );
-            conf.updateIfSet( "heading_attr", _headingAttr );
+            conf.set( "url", _imageURI );
+            conf.set( "scale", _scale );
+            conf.setObj( "selector", _selector );
+            conf.set( "heading_attr", _headingAttr );
             return conf;
         }
 
@@ -203,9 +203,9 @@ namespace osgEarth { namespace Aerodrome
     public:
         Config getConfig() const {
             Config conf = ConfigOptions::getConfig();
-            conf.updateIfSet( "icao_attr", _icaoAttr );
-            conf.updateObjIfSet( "features", _featureOptions );
-            conf.updateObjIfSet( "texture", _textureOptions );
+            conf.set( "icao_attr", _icaoAttr );
+            conf.setObj( "features", _featureOptions );
+            conf.setObj( "texture", _textureOptions );
 
             for(ModelOptionsSet::const_iterator i = _modelOptions.begin(); i != _modelOptions.end(); ++i)
                 conf.add("model", i->getConfig());
@@ -261,7 +261,7 @@ namespace osgEarth { namespace Aerodrome
     public:
         Config getConfig() const {
             Config conf = AerodromeFeatureOptions::getConfig();
-            conf.updateIfSet( "elevation_attr", _elevationAttr );
+            conf.set( "elevation_attr", _elevationAttr );
 
             return conf;
         }
@@ -316,7 +316,7 @@ namespace osgEarth { namespace Aerodrome
             {
                 Config skinsConf;
 
-                skinsConf.updateIfSet("url", _skinsURI);
+                skinsConf.set("url", _skinsURI);
 
                 for (std::vector<std::string>::const_iterator it = _wallTags.begin(); it != _wallTags.end(); ++it)
                     skinsConf.add("wall_tag", (*it));

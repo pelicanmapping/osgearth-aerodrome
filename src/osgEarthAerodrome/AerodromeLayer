@@ -99,7 +99,7 @@ namespace osgEarth { namespace Aerodrome
     class OSGEARTHAERODROME_EXPORT AerodromeLayer : public VisibleLayer
     {
     public:
-        META_Layer(osgEarthAerodrome, AerodromeLayer, AerodromeLayerOptions);
+        META_Layer(osgEarthAerodrome, AerodromeLayer, AerodromeLayerOptions, aerodromes);
 
         //! Default constructor
         AerodromeLayer();
