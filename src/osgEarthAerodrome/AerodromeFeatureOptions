@@ -64,14 +64,18 @@ namespace osgEarth { namespace Aerodrome
 
     private:
         void fromConfig( const Config& conf ) {
-            conf.getIfSet<std::string>( "attr", _attr );
-            conf.getIfSet<std::string>( "value", _value );
+            conf.get( "attr", _attr );
+            conf.get( "value", _value );
         }
      
         optional<std::string>  _attr;
         optional<std::string>  _value;
     };
+} }
+OSGEARTH_SPECIALIZE_CONFIG(osgEarth::Aerodrome::FeatureSelectorOptions);
 
+namespace osgEarth { namespace Aerodrome
+{
     class TextureOptions : public ConfigOptions
     {
     public:
@@ -106,14 +110,18 @@ namespace osgEarth { namespace Aerodrome
 
     private:
         void fromConfig( const Config& conf ) {
-            conf.getIfSet( "url", _imageURI );
-            conf.getIfSet<float>( "length", _length );
+            conf.get( "url", _imageURI );
+            conf.get( "length", _length );
         }
      
         optional<URI>    _imageURI;
         optional<float> _length;
     };
+} }
+OSGEARTH_SPECIALIZE_CONFIG(osgEarth::Aerodrome::TextureOptions);
 
+namespace osgEarth { namespace Aerodrome
+{
     class ModelOptions : public ConfigOptions
     {
     public:
@@ -144,7 +152,7 @@ namespace osgEarth { namespace Aerodrome
             Config conf = ConfigOptions::getConfig();
             conf.set( "url", _imageURI );
             conf.set( "scale", _scale );
-            conf.setObj( "selector", _selector );
+            conf.set( "selector", _selector );
             conf.set( "heading_attr", _headingAttr );
             return conf;
         }
@@ -157,10 +165,10 @@ namespace osgEarth { namespace Aerodrome
 
     private:
         void fromConfig( const Config& conf ) {
-            conf.getIfSet( "url", _imageURI );
-            conf.getIfSet<float>( "scale", _scale );
-            conf.getObjIfSet( "selector", _selector );
-            conf.getIfSet( "heading_attr", _headingAttr );
+            conf.get( "url", _imageURI );
+            conf.get( "scale", _scale );
+            conf.get( "selector", _selector );
+            conf.get( "heading_attr", _headingAttr );
         }
      
         optional<URI>                    _imageURI;
@@ -170,7 +178,11 @@ namespace osgEarth { namespace Aerodrome
     };
 
     typedef std::list<class ModelOptions> ModelOptionsSet;
+} }
+OSGEARTH_SPECIALIZE_CONFIG(osgEarth::Aerodrome::ModelOptions);
 
+namespace osgEarth { namespace Aerodrome
+{
     /**
      * Options for the Aerodrome features
      */
@@ -204,8 +216,8 @@ namespace osgEarth { namespace Aerodrome
         Config getConfig() const {
             Config conf = ConfigOptions::getConfig();
             conf.set( "icao_attr", _icaoAttr );
-            conf.setObj( "features", _featureOptions );
-            conf.setObj( "texture", _textureOptions );
+            conf.set( "features", _featureOptions );
+            conf.set( "texture", _textureOptions );
 
             for(ModelOptionsSet::const_iterator i = _modelOptions.begin(); i != _modelOptions.end(); ++i)
                 conf.add("model", i->getConfig());
@@ -220,9 +232,9 @@ namespace osgEarth { namespace Aerodrome
         }
 
         void fromConfig( const Config& conf ) {
-            conf.getIfSet( "icao_attr", _icaoAttr );
-            conf.getObjIfSet( "features", _featureOptions );
-            conf.getObjIfSet( "texture", _textureOptions );
+            conf.get( "icao_attr", _icaoAttr );
+            conf.get( "features", _featureOptions );
+            conf.get( "texture", _textureOptions );
             
             ConfigSet models = conf.children("model");
             for (ConfigSet::const_iterator i = models.begin(); i != models.end(); i++)
@@ -238,7 +250,11 @@ namespace osgEarth { namespace Aerodrome
     };
 
     typedef std::list<class AerodromeFeatureOptions> AerodromeOptionsSet;
+} }
+OSGEARTH_SPECIALIZE_CONFIG(osgEarth::Aerodrome::AerodromeFeatureOptions);
 
+namespace osgEarth { namespace Aerodrome
+{
     /**
      * Options for the Boundary features
      */
@@ -275,7 +291,7 @@ namespace osgEarth { namespace Aerodrome
         void fromConfig( const Config& conf ) {
             AerodromeFeatureOptions::fromConfig(conf);
 
-            conf.getIfSet( "elevation_attr", _elevationAttr );
+            conf.get( "elevation_attr", _elevationAttr );
         }
 
     private:
@@ -284,8 +300,11 @@ namespace osgEarth { namespace Aerodrome
     };
 
     typedef std::list<class BoundaryFeatureOptions> BoundaryOptionsSet;
-
-
+} }
+OSGEARTH_SPECIALIZE_CONFIG(osgEarth::Aerodrome::BoundaryFeatureOptions);
+    
+namespace osgEarth { namespace Aerodrome
+{
     /**
      * Options for the Terminal features
      */
@@ -346,7 +365,7 @@ namespace osgEarth { namespace Aerodrome
             Config skins = conf.child("skins");
             if (!skins.empty())
             {
-                skins.getIfSet("url", _skinsURI);
+                skins.get("url", _skinsURI);
 
                 ConfigSet wallTags = skins.children("wall_tag");
                 for (ConfigSet::const_iterator i = wallTags.begin(); i != wallTags.end(); i++)
@@ -368,5 +387,6 @@ namespace osgEarth { namespace Aerodrome
     typedef std::list<class TerminalFeatureOptions> TerminalOptionsSet;
 
 } } // namespace osgEarth::Aerodrome
+OSGEARTH_SPECIALIZE_CONFIG(osgEarth::Aerodrome::TerminalFeatureOptions);
 
 #endif // OSGEARTH_AERODROME_AERODROMEFEATUREOPTIONS

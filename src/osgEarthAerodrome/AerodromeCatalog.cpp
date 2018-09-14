@@ -38,7 +38,7 @@ AerodromeCatalog::AerodromeCatalog()
 void
 AerodromeCatalog::fromConfig(const Config& conf)
 {
-    conf.getIfSet("version", _version);
+    conf.get("version", _version);
 
     ConfigSet boundaries = conf.children("boundaries");
     for (ConfigSet::const_iterator i = boundaries.begin(); i != boundaries.end(); i++)
@@ -97,7 +97,7 @@ Config
 AerodromeCatalog::getConfig() const
 {
     Config conf;
-    conf.addIfSet("version", _version);
+    conf.set("version", _version);
 
     for(BoundaryOptionsSet::const_iterator i = _boundaryOptions.begin(); i != _boundaryOptions.end(); ++i)
         conf.add("boundaries", i->getConfig());

@@ -80,10 +80,10 @@ namespace osgEarth { namespace Aerodrome
     private:
         void fromConfig(const Config& conf)
         {
-            conf.getIfSet("catalog", _catalog);
-            conf.getIfSet("range", _range);
-            conf.getIfSet("render_order", _renderOrder);
-            conf.getIfSet("render_bin", _renderBin);
+            conf.get("catalog", _catalog);
+            conf.get("range", _range);
+            conf.get("render_order", _renderOrder);
+            conf.get("render_bin", _renderBin);
         }
 
         optional<URI> _catalog;
