@@ -1,2 +1,1 @@
-# osgearth-aerodrome
-Aerodrome Rendering for osgEarth
+This project is unsupported. Use it at your own risk.
